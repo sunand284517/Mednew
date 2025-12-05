@@ -1,0 +1,59 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Search Results - MedAssist Now</title>
+    <link rel="stylesheet" href="../styles/dashboard-modern.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+</head>
+<body>
+    <!-- Emergency Banner -->
+    <div class="emergency-banner">
+        <div class="container">
+            <div class="banner-content">
+                <i class="fas fa-ambulance"></i>
+                <span>Need medicines urgently? We're available 24/7 for emergency deliveries!</span>
+                <a href="search.html" class="emergency-btn">Emergency Request</a>
+            </div>
+        </div>
+    </div>
+
+    <div class="dashboard-container">
+        <!-- Dashboard Header -->
+        <div class="dashboard-header">
+            <div class="header-content">
+                <div class="user-welcome">
+                    <h1><i class="fas fa-capsules"></i> Search Results</h1>
+                    <p id="resultsCount">No results found</p>
+                </div>
+                <div class="header-actions">
+                    <a href="dashboard.html" class="icon-btn">
+                        <i class="fas fa-home"></i>
+                    </a>
+                    <a href="search.html" class="icon-btn">
+                        <i class="fas fa-search"></i>
+                    </a>
+                    <a href="cart.html" class="icon-btn" style="background: var(--gradient-accent);">
+                        <i class="fas fa-shopping-cart"></i>
+                    </a>
+                    <a href="profile.html" class="profile-btn" id="userInitials">U</a>
+                </div>
+            </div>
+        </div>
+
+        <!-- Dashboard Content -->
+        <div class="dashboard-content">
+            <!-- Results Container -->
+            <div id="searchResultsContainer" style="text-align: center; padding: 60px 20px; color: var(--text-secondary);">
+                <i class="fas fa-search" style="font-size: 4rem; opacity: 0.3; display: block; margin-bottom: 20px;"></i>
+                <h3 style="margin-bottom: 10px; color: var(--text-primary);">No search results</h3>
+                <p style="margin-bottom: 25px;">Start searching for medicines to see availability across nearby pharmacies</p>
+                <a href="search.html" class="btn-primary">
+                    <i class="fas fa-search"></i> Search Medicines
+                </a>
+            </div>
+        </div>
+    </div>
+</body>
+</html>

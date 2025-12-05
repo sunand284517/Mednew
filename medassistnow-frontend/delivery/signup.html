@@ -1,0 +1,378 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Delivery Partner Registration - MedAssist Now</title>
+    <link rel="stylesheet" href="../styles.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <style>
+        .auth-container {
+            min-height: 100vh;
+            background: linear-gradient(135deg, #10b981 0%, #34d399 100%);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 40px 20px;
+        }
+        
+        .auth-card {
+            background: white;
+            border-radius: 25px;
+            padding: 50px;
+            max-width: 700px;
+            width: 100%;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+            animation: fadeIn 0.5s;
+        }
+        
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        
+        .auth-header {
+            text-align: center;
+            margin-bottom: 40px;
+        }
+        
+        .auth-logo {
+            font-size: 3rem;
+            margin-bottom: 15px;
+        }
+        
+        .auth-logo i {
+            background: linear-gradient(135deg, #10b981 0%, #34d399 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+        
+        .auth-title {
+            font-size: 2rem;
+            font-weight: 700;
+            color: var(--text-primary);
+            margin-bottom: 10px;
+        }
+        
+        .auth-subtitle {
+            color: var(--text-secondary);
+            font-size: 0.95rem;
+        }
+        
+        .form-row {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 20px;
+        }
+        
+        .form-group {
+            margin-bottom: 25px;
+        }
+        
+        .form-label {
+            display: block;
+            margin-bottom: 8px;
+            color: var(--text-primary);
+            font-weight: 500;
+            font-size: 0.95rem;
+        }
+        
+        .form-input-group {
+            position: relative;
+        }
+        
+        .form-input-group i {
+            position: absolute;
+            left: 15px;
+            top: 50%;
+            transform: translateY(-50%);
+            color: var(--text-secondary);
+        }
+        
+        .form-input {
+            width: 100%;
+            padding: 15px 15px 15px 45px;
+            border: 2px solid #e5e7eb;
+            border-radius: 12px;
+            font-family: 'Poppins', sans-serif;
+            font-size: 1rem;
+            transition: all 0.3s;
+        }
+        
+        .form-input:focus {
+            outline: none;
+            border-color: #10b981;
+            box-shadow: 0 0 0 4px rgba(16, 185, 129, 0.1);
+        }
+        
+        .checkbox-group {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            margin-bottom: 30px;
+        }
+        
+        .checkbox-group input[type="checkbox"] {
+            width: 18px;
+            height: 18px;
+            cursor: pointer;
+        }
+        
+        .checkbox-group label {
+            color: var(--text-secondary);
+            font-size: 0.9rem;
+        }
+        
+        .checkbox-group a {
+            color: #10b981;
+            text-decoration: none;
+            font-weight: 500;
+        }
+        
+        .btn-signup {
+            width: 100%;
+            padding: 18px;
+            background: linear-gradient(135deg, #10b981 0%, #34d399 100%);
+            color: white;
+            border: none;
+            border-radius: 12px;
+            font-size: 1.1rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: transform 0.3s;
+            font-family: 'Poppins', sans-serif;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 10px;
+        }
+        
+        .btn-signup:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 30px rgba(16, 185, 129, 0.3);
+        }
+        
+        .auth-links {
+            text-align: center;
+            margin-top: 30px;
+            padding-top: 30px;
+            border-top: 1px solid #e5e7eb;
+        }
+        
+        .auth-links a {
+            color: #10b981;
+            text-decoration: none;
+            font-weight: 600;
+        }
+        
+        .home-link {
+            text-align: center;
+            margin-top: 20px;
+        }
+        
+        .home-link a {
+            color: var(--text-secondary);
+            text-decoration: none;
+            font-size: 0.9rem;
+            display: inline-flex;
+            align-items: center;
+            gap: 5px;
+        }
+        
+        .home-link a:hover {
+            color: #10b981;
+        }
+    </style>
+</head>
+<body>
+    <div class="auth-container">
+        <div class="auth-card">
+            <div class="auth-header">
+                <div class="auth-logo">
+                    <i class="fas fa-motorcycle"></i>
+                </div>
+                <h1 class="auth-title">Join as Delivery Partner</h1>
+                <p class="auth-subtitle">Start earning by delivering medicines to customers</p>
+            </div>
+            
+            <form id="deliverySignupForm">
+                <div class="form-row">
+                    <div class="form-group">
+                        <label class="form-label">First Name</label>
+                        <div class="form-input-group">
+                            <i class="fas fa-user"></i>
+                            <input type="text" id="firstName" class="form-input" placeholder="John" required>
+                        </div>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label class="form-label">Last Name</label>
+                        <div class="form-input-group">
+                            <i class="fas fa-user"></i>
+                            <input type="text" id="lastName" class="form-input" placeholder="Doe" required>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="form-group">
+                    <label class="form-label">Email Address</label>
+                    <div class="form-input-group">
+                        <i class="fas fa-envelope"></i>
+                        <input type="email" id="email" class="form-input" placeholder="john.doe@example.com" required>
+                    </div>
+                </div>
+                
+                <div class="form-group">
+                    <label class="form-label">Phone Number</label>
+                    <div class="form-input-group">
+                        <i class="fas fa-phone"></i>
+                        <input type="tel" id="phone" class="form-input" placeholder="+91 9876543210" required>
+                    </div>
+                </div>
+                
+                <div class="form-row">
+                    <div class="form-group">
+                        <label class="form-label">Vehicle Type</label>
+                        <div class="form-input-group">
+                            <i class="fas fa-motorcycle"></i>
+                            <input type="text" id="vehicleType" class="form-input" placeholder="Bike/Scooter/Car" required>
+                        </div>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label class="form-label">Vehicle Number</label>
+                        <div class="form-input-group">
+                            <i class="fas fa-id-card"></i>
+                            <input type="text" id="vehicleNumber" class="form-input" placeholder="MH12AB1234" required>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="form-group">
+                    <label class="form-label">Driver License Number</label>
+                    <div class="form-input-group">
+                        <i class="fas fa-id-card-alt"></i>
+                        <input type="text" id="licenseNumber" class="form-input" placeholder="DL1234567890" required>
+                    </div>
+                </div>
+                
+                <div class="form-group">
+                    <label class="form-label">Address</label>
+                    <div class="form-input-group">
+                        <i class="fas fa-map-marker-alt"></i>
+                        <input type="text" id="address" class="form-input" placeholder="123 Main Street, City, State" required>
+                    </div>
+                </div>
+                
+                <div class="form-row">
+                    <div class="form-group">
+                        <label class="form-label">Password</label>
+                        <div class="form-input-group">
+                            <i class="fas fa-lock"></i>
+                            <input type="password" id="password" class="form-input" placeholder="••••••••" required>
+                        </div>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label class="form-label">Confirm Password</label>
+                        <div class="form-input-group">
+                            <i class="fas fa-lock"></i>
+                            <input type="password" id="confirmPassword" class="form-input" placeholder="••••••••" required>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="checkbox-group">
+                    <input type="checkbox" id="terms" required>
+                    <label for="terms">
+                        I agree to the <a href="#">Terms of Service</a> and <a href="#">Privacy Policy</a>
+                    </label>
+                </div>
+                
+                <button type="submit" class="btn-signup">
+                    <i class="fas fa-motorcycle"></i> Register as Partner
+                </button>
+            </form>
+            
+            <div class="auth-links">
+                <p style="color: var(--text-secondary);">
+                    Already have an account? <a href="login.html">Sign In</a>
+                </p>
+            </div>
+            
+            <div class="home-link">
+                <a href="../index.html">
+                    <i class="fas fa-home"></i> Back to Home
+                </a>
+            </div>
+        </div>
+    </div>
+    
+    <!-- API Integration Scripts -->
+    <script src="../js/config.js"></script>
+    <script src="../js/auth.js"></script>
+    <script src="../js/api.js"></script>
+    <script src="../js/utils.js"></script>
+    <script src="../js/auth.service.js"></script>
+    <script>
+        document.getElementById('deliverySignupForm').addEventListener('submit', async function(e) {
+            e.preventDefault();
+            
+            const firstName = document.getElementById('firstName').value.trim();
+            const lastName = document.getElementById('lastName').value.trim();
+            const email = document.getElementById('email').value.trim();
+            const password = document.getElementById('password').value;
+            const confirmPassword = document.getElementById('confirmPassword').value;
+            
+            // Validation
+            if (!firstName || !lastName || !email || !password) {
+                Utils.showToast('Please fill in all required fields', 'error');
+                return;
+            }
+            
+            if (password !== confirmPassword) {
+                Utils.showToast('Passwords do not match', 'error');
+                return;
+            }
+            
+            if (password.length < 6) {
+                Utils.showToast('Password must be at least 6 characters', 'error');
+                return;
+            }
+            
+            const deliveryData = {
+                name: `${firstName} ${lastName}`.trim(),
+                email: email,
+                password: password,
+                phone: document.getElementById('phone').value.trim(),
+                vehicleType: document.getElementById('vehicleType').value,
+                vehicleNumber: document.getElementById('vehicleNumber').value.trim(),
+                licenseNumber: document.getElementById('licenseNumber').value.trim(),
+                address: {
+                    street: document.getElementById('address').value.trim(),
+                    city: '',
+                    state: '',
+                    pincode: ''
+                },
+                role: 'delivery'
+            };
+            
+            console.log('Delivery signup data:', { ...deliveryData, password: '***' });
+            
+            try {
+                Utils.showLoading();
+                const response = await AuthService.register(deliveryData);
+                Utils.hideLoading();
+                
+                Utils.showToast('Registration successful! Redirecting...', 'success');
+                setTimeout(() => {
+                    window.location.href = 'login.html';
+                }, 1500);
+            } catch (error) {
+                Utils.hideLoading();
+                Utils.showToast(error.message || 'Registration failed', 'error');
+            }
+        });
+    </script>
+</body>
+</html>

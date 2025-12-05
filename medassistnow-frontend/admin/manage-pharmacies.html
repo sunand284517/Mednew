@@ -1,0 +1,332 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Manage Pharmacies - MedAssist Now</title>
+    <link rel="stylesheet" href="../styles/dashboard-modern.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <style>
+        .empty-state { text-align: center; padding: 60px 20px; color: var(--text-secondary); }
+        .empty-state i { font-size: 4rem; margin-bottom: 20px; opacity: 0.5; }
+        .tab-btn { padding: 10px 25px; border: none; background: none; cursor: pointer; font-size: 14px; font-weight: 500; border-bottom: 2px solid transparent; transition: all 0.3s; }
+        .tab-btn.active { color: var(--primary-color); border-bottom-color: var(--primary-color); }
+        .tab-btn:hover { color: var(--primary-color); }
+        .search-bar { display: flex; gap: 15px; flex-wrap: wrap; }
+        @media (max-width: 768px) {
+            .dashboard-header .header-content { flex-direction: column; gap: 15px; text-align: center; }
+            .header-actions { justify-content: center; }
+            .search-bar { flex-direction: column; }
+            .search-bar input, .search-bar select { width: 100% !important; }
+        }
+    </style>
+</head>
+<body data-required-role="admin">
+    <script src="../js/config.js"></script>
+    <script>
+        (async function() {
+            const token = localStorage.getItem('token');
+            if (!token) { window.location.replace('login.html'); return; }
+            try {
+                const response = await fetch(`${API_CONFIG.BASE_URL}/auth/me`, { headers: { 'Authorization': `Bearer ${token}` } });
+                if (!response.ok) { localStorage.clear(); window.location.replace('login.html'); return; }
+                const data = await response.json();
+                if (data.data.user.role !== 'admin') { alert('Access denied. Admin role required.'); localStorage.clear(); window.location.replace('login.html'); return; }
+                localStorage.setItem('userCache', JSON.stringify(data.data.user));
+            } catch (e) { console.error('Auth error:', e); localStorage.clear(); window.location.replace('login.html'); }
+        })();
+    </script>
+    <div class="emergency-banner">
+        <div class="container">
+            <div class="banner-content">
+                <i class="fas fa-ambulance"></i>
+                <span>Admin Dashboard - Manage pharmacy partners</span>
+                <a href="dashboard.html" class="emergency-btn">Dashboard</a>
+            </div>
+        </div>
+    </div>
+    <div class="dashboard-container">
+        <div class="dashboard-header">
+            <div class="header-content">
+                <div class="user-welcome">
+                    <h1><i class="fas fa-store"></i> Manage Pharmacies</h1>
+                    <p>Pharmacy approvals and management</p>
+                </div>
+                <div class="header-actions">
+                    <a href="dashboard.html" class="icon-btn"><i class="fas fa-home"></i></a>
+                    <a href="settings.html" class="profile-btn"><i class="fas fa-cog"></i></a>
+                </div>
+            </div>
+        </div>
+        <div class="dashboard-content">
+            <div class="section-card">
+                <!-- Tabs -->
+                <div style="display: flex; gap: 15px; margin-bottom: 25px; border-bottom: 2px solid #f1f5f9; padding-bottom: 15px;">
+                    <button class="tab-btn active" data-status="pending" onclick="filterByStatus('pending')">Pending (<span id="pendingCount">0</span>)</button>
+                    <button class="tab-btn" data-status="approved" onclick="filterByStatus('approved')">Approved (<span id="approvedCount">0</span>)</button>
+                    <button class="tab-btn" data-status="rejected" onclick="filterByStatus('rejected')">Rejected (<span id="rejectedCount">0</span>)</button>
+                    <button class="tab-btn" data-status="all" onclick="filterByStatus('all')">All (<span id="allCount">0</span>)</button>
+                </div>
+
+                <!-- Search Bar -->
+                <div style="margin-bottom: 20px;">
+                    <div class="search-bar">
+                        <input type="text" id="searchInput" class="form-input" placeholder="Search pharmacies..." style="width: 300px;" onkeyup="filterPharmacies()">
+                        <select id="locationFilter" class="form-input" style="width: 180px;" onchange="filterPharmacies()">
+                            <option value="">All Locations</option>
+                        </select>
+                    </div>
+                </div>
+
+                <!-- Table -->
+                <table class="data-table">
+                    <thead>
+                        <tr>
+                            <th>Pharmacy ID</th>
+                            <th>Name</th>
+                            <th>License</th>
+                            <th>Location</th>
+                            <th>Applied On</th>
+                            <th>Status</th>
+                            <th>Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody id="pharmaciesTableBody">
+                        <tr>
+                            <td colspan="7" style="text-align: center; padding: 40px;">
+                                <i class="fas fa-spinner fa-spin" style="font-size: 2rem; color: var(--primary-color);"></i>
+                                <p style="margin-top: 10px;">Loading pharmacies...</p>
+                            </td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
+    <script src="../js/config.js"></script>
+    <script src="../js/auth.js"></script>
+    <script src="../js/api.js"></script>
+    <script src="../js/utils.js"></script>
+    <script>
+        let allPharmacies = [];
+        let currentStatus = 'pending';
+
+        document.addEventListener('DOMContentLoaded', function() {
+            loadPharmacies();
+        });
+
+        async function loadPharmacies() {
+            try {
+                const token = localStorage.getItem('token');
+                const response = await fetch(`${API_CONFIG.BASE_URL}/users?role=pharmacy`, {
+                    headers: { 'Authorization': `Bearer ${token}` }
+                });
+
+                if (response.ok) {
+                    const data = await response.json();
+                    allPharmacies = data.data || data.users || [];
+                    updateCounts();
+                    populateLocationFilter();
+                    displayPharmacies(filterByCurrentStatus());
+                } else {
+                    showNoPharmacies();
+                }
+            } catch (error) {
+                console.error('Error loading pharmacies:', error);
+                showNoPharmacies();
+            }
+        }
+
+        function updateCounts() {
+            const pending = allPharmacies.filter(p => p.status === 'pending' || !p.status).length;
+            const approved = allPharmacies.filter(p => p.status === 'approved' || p.isVerified).length;
+            const rejected = allPharmacies.filter(p => p.status === 'rejected').length;
+            
+            document.getElementById('pendingCount').textContent = pending;
+            document.getElementById('approvedCount').textContent = approved;
+            document.getElementById('rejectedCount').textContent = rejected;
+            document.getElementById('allCount').textContent = allPharmacies.length;
+        }
+
+        function populateLocationFilter() {
+            const locations = new Set();
+            allPharmacies.forEach(p => {
+                const city = p.address?.city || p.city || p.location;
+                if (city) locations.add(city);
+            });
+
+            const filter = document.getElementById('locationFilter');
+            filter.innerHTML = '<option value="">All Locations</option>';
+            [...locations].sort().forEach(loc => {
+                filter.innerHTML += `<option value="${loc}">${loc}</option>`;
+            });
+        }
+
+        function filterByStatus(status) {
+            currentStatus = status;
+            
+            // Update active tab
+            document.querySelectorAll('.tab-btn').forEach(btn => {
+                btn.classList.toggle('active', btn.dataset.status === status);
+            });
+            
+            displayPharmacies(filterByCurrentStatus());
+        }
+
+        function filterByCurrentStatus() {
+            let filtered = [...allPharmacies];
+            
+            if (currentStatus === 'pending') {
+                filtered = filtered.filter(p => p.status === 'pending' || (!p.status && !p.isVerified));
+            } else if (currentStatus === 'approved') {
+                filtered = filtered.filter(p => p.status === 'approved' || p.isVerified);
+            } else if (currentStatus === 'rejected') {
+                filtered = filtered.filter(p => p.status === 'rejected');
+            }
+            
+            return filtered;
+        }
+
+        function filterPharmacies() {
+            const search = document.getElementById('searchInput').value.toLowerCase();
+            const location = document.getElementById('locationFilter').value;
+            
+            let filtered = filterByCurrentStatus().filter(pharmacy => {
+                const name = (pharmacy.name || pharmacy.pharmacyName || '').toLowerCase();
+                const license = (pharmacy.licenseNumber || '').toLowerCase();
+                const city = pharmacy.address?.city || pharmacy.city || pharmacy.location || '';
+                
+                const matchesSearch = !search || name.includes(search) || license.includes(search);
+                const matchesLocation = !location || city === location;
+                
+                return matchesSearch && matchesLocation;
+            });
+            
+            displayPharmacies(filtered);
+        }
+
+        function displayPharmacies(pharmacies) {
+            const tbody = document.getElementById('pharmaciesTableBody');
+            
+            if (pharmacies.length === 0) {
+                showNoPharmacies();
+                return;
+            }
+            
+            tbody.innerHTML = pharmacies.map(pharmacy => {
+                const id = pharmacy._id?.slice(-6).toUpperCase() || 'N/A';
+                const name = pharmacy.name || pharmacy.pharmacyName || 'Unknown';
+                const license = pharmacy.licenseNumber || 'N/A';
+                const location = pharmacy.address?.city || pharmacy.city || pharmacy.location || 'N/A';
+                const appliedDate = pharmacy.createdAt ? formatDate(new Date(pharmacy.createdAt)) : 'N/A';
+                const status = pharmacy.isVerified ? 'approved' : (pharmacy.status || 'pending');
+                const statusBadge = getStatusBadge(status);
+                
+                return `
+                    <tr>
+                        <td><strong>#PH-${id}</strong></td>
+                        <td>${name}</td>
+                        <td>${license}</td>
+                        <td>${location}</td>
+                        <td>${appliedDate}</td>
+                        <td>${statusBadge}</td>
+                        <td>
+                            ${status === 'pending' ? `
+                                <button class="btn-primary" style="padding: 5px 15px; font-size: 14px;" onclick="updateStatus('${pharmacy._id}', 'approved')">Approve</button>
+                                <button class="btn-outline" style="padding: 5px 15px; font-size: 14px; margin-left: 5px;" onclick="updateStatus('${pharmacy._id}', 'rejected')">Reject</button>
+                            ` : `
+                                <button class="icon-btn" title="View Details" onclick="viewDetails('${pharmacy._id}')"><i class="fas fa-eye"></i></button>
+                                ${status === 'approved' ? `<button class="icon-btn" title="Suspend" onclick="updateStatus('${pharmacy._id}', 'suspended')"><i class="fas fa-ban"></i></button>` : ''}
+                                ${status === 'rejected' ? `<button class="icon-btn" title="Approve" onclick="updateStatus('${pharmacy._id}', 'approved')"><i class="fas fa-check"></i></button>` : ''}
+                            `}
+                        </td>
+                    </tr>
+                `;
+            }).join('');
+        }
+
+        function getStatusBadge(status) {
+            const badges = {
+                'pending': '<span class="badge badge-warning">Pending</span>',
+                'approved': '<span class="badge badge-success">Approved</span>',
+                'rejected': '<span class="badge badge-danger">Rejected</span>',
+                'suspended': '<span class="badge badge-danger">Suspended</span>'
+            };
+            return badges[status] || badges['pending'];
+        }
+
+        function formatDate(date) {
+            const now = new Date();
+            const diff = now - date;
+            const dayDiff = Math.floor(diff / (1000 * 60 * 60 * 24));
+            
+            if (dayDiff === 0) {
+                return `Today, ${date.toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit' })}`;
+            } else if (dayDiff === 1) {
+                return `Yesterday, ${date.toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit' })}`;
+            } else {
+                return date.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
+            }
+        }
+
+        async function updateStatus(pharmacyId, newStatus) {
+            const action = newStatus === 'approved' ? 'approve' : (newStatus === 'rejected' ? 'reject' : 'suspend');
+            if (!confirm(`Are you sure you want to ${action} this pharmacy?`)) return;
+            
+            try {
+                const token = localStorage.getItem('token');
+                const response = await fetch(`${API_CONFIG.BASE_URL}/users/${pharmacyId}`, {
+                    method: 'PUT',
+                    headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` },
+                    body: JSON.stringify({ 
+                        status: newStatus,
+                        isVerified: newStatus === 'approved'
+                    })
+                });
+
+                if (response.ok) {
+                    showToast(`Pharmacy ${action}d successfully!`, 'success');
+                    loadPharmacies();
+                } else {
+                    showToast(`Failed to ${action} pharmacy`, 'error');
+                }
+            } catch (error) {
+                console.error('Error updating status:', error);
+                showToast('Error updating pharmacy status', 'error');
+            }
+        }
+
+        function viewDetails(pharmacyId) {
+            showToast('Details view coming soon!', 'info');
+        }
+
+        function showNoPharmacies() {
+            document.getElementById('pharmaciesTableBody').innerHTML = `
+                <tr>
+                    <td colspan="7">
+                        <div class="empty-state">
+                            <i class="fas fa-store"></i>
+                            <h3>No Pharmacies Found</h3>
+                            <p>Pharmacies will appear here when they register</p>
+                        </div>
+                    </td>
+                </tr>
+            `;
+        }
+
+        function showToast(message, type = 'success') {
+            const toast = document.createElement('div');
+            toast.style.cssText = `
+                position: fixed; bottom: 20px; right: 20px; padding: 15px 25px;
+                background: ${type === 'error' ? '#ef4444' : type === 'info' ? '#3b82f6' : '#10b981'};
+                color: white; border-radius: 10px; font-weight: 500; z-index: 10000;
+                animation: slideIn 0.3s ease;
+            `;
+            toast.innerHTML = `<i class="fas fa-${type === 'error' ? 'times-circle' : type === 'info' ? 'info-circle' : 'check-circle'}"></i> ${message}`;
+            document.body.appendChild(toast);
+            setTimeout(() => toast.remove(), 3000);
+        }
+    </script>
+</body>
+</html>

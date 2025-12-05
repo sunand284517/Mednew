@@ -1,0 +1,505 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>MedAssist Now - Real-Time Medicine Availability & Emergency Delivery</title>
+    <link rel="stylesheet" href="styles.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+</head>
+<body>
+    <!-- Emergency Banner -->
+    <div class="emergency-banner">
+        <div class="container">
+            <div class="banner-content">
+                <i class="fas fa-ambulance"></i>
+                <span>Need medicines urgently? We're available 24/7 for emergency deliveries!</span>
+                <a href="user/search.html" class="emergency-btn">Emergency Request</a>
+            </div>
+        </div>
+    </div>
+
+    <!-- Header -->
+    <header class="header">
+        <nav class="navbar">
+            <div class="container">
+                <div class="nav-wrapper">
+                    <div class="logo">
+                        <i class="fas fa-heartbeat"></i>
+                        <div class="logo-text">
+                            <span class="logo-main">MedAssist<span class="highlight">Now</span></span>
+                            <span class="logo-tagline">Real-Time Medicine Availability</span>
+                        </div>
+                    </div>
+                    
+                    <ul class="nav-menu">
+                        <li><a href="#" class="active">Home</a></li>
+                        <li><a href="#how-it-works">How It Works</a></li>
+                        <li><a href="#services">Services</a></li>
+                        <li><a href="#track-order">Track Order</a></li>
+                        <li><a href="#about">About</a></li>
+                    </ul>
+                    
+                    <div class="nav-actions">
+                        <a href="user/login.html" class="btn btn-outline">Sign In</a>
+                        <a href="user/signup.html" class="btn btn-primary">Register</a>
+                    </div>
+                </div>
+            </div>
+        </nav>
+    </header>
+
+    <!-- Hero Section -->
+    <section class="hero">
+        <div class="container">
+            <div class="hero-grid">
+                <div class="hero-content">
+                    <div class="hero-badge">
+                        <i class="fas fa-check-circle"></i>
+                        <span>Available 24/7 • Real-Time Tracking</span>
+                    </div>
+                    <h1>Find Essential Medicines <span class="gradient-text">Instantly</span></h1>
+                    <p class="hero-subtitle">Emergency medicine delivery system connecting patients with nearby pharmacies in real-time. Never miss critical treatments again.</p>
+                    
+                    <!-- Real-Time Medicine Search -->
+                    <div class="medicine-search-box">
+                        <div class="search-header">
+                            <i class="fas fa-search-location"></i>
+                            <h3>Search Medicine Availability</h3>
+                        </div>
+                        <div class="search-form">
+                            <div class="input-group">
+                                <i class="fas fa-pills"></i>
+                                <input type="text" placeholder="Enter medicine name (e.g., Paracetamol)">
+                            </div>
+                            <div class="input-group">
+                                <i class="fas fa-map-marker-alt"></i>
+                                <input type="text" placeholder="Enter your location">
+                                <button class="location-btn"><i class="fas fa-crosshairs"></i></button>
+                            </div>
+                            <a href="user/search.html" class="search-btn">
+                                <i class="fas fa-search"></i>
+                                Search Real-Time Availability
+                            </a>
+                        </div>
+                        <div class="search-features">
+                            <span><i class="fas fa-clock"></i> Live Updates</span>
+                            <span><i class="fas fa-store"></i> Partner Pharmacies</span>
+                            <span><i class="fas fa-shipping-fast"></i> Fast Delivery</span>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="hero-image">
+                    <div class="floating-card card-1">
+                        <div class="card-icon"><i class="fas fa-hospital"></i></div>
+                        <div class="card-content">
+                            <div class="card-title">Pharmacy Near You</div>
+                            <div class="card-status available">Available Now</div>
+                        </div>
+                    </div>
+                    <div class="floating-card card-2">
+                        <div class="card-icon"><i class="fas fa-truck"></i></div>
+                        <div class="card-content">
+                            <div class="card-title">Delivery Partner</div>
+                            <div class="card-status">On the way</div>
+                        </div>
+                    </div>
+                    <div class="floating-card card-3">
+                        <div class="card-icon"><i class="fas fa-check-circle"></i></div>
+                        <div class="card-content">
+                            <div class="card-title">Order Confirmed</div>
+                            <div class="card-status">ETA: 25 mins</div>
+                        </div>
+                    </div>
+                    <div class="hero-illustration">
+                        <i class="fas fa-laptop-medical"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Problem Statement Section -->
+    <section class="problem-section">
+        <div class="container">
+            <div class="problem-grid">
+                <div class="problem-content">
+                    <span class="section-label">The Problem</span>
+                    <h2>Why MedAssist Now?</h2>
+                    <div class="problem-list">
+                        <div class="problem-item">
+                            <div class="problem-icon"><i class="fas fa-moon"></i></div>
+                            <div>
+                                <h4>Unavailable During Night Hours</h4>
+                                <p>Traditional pharmacies close at night, leaving patients stranded during emergencies.</p>
+                            </div>
+                        </div>
+                        <div class="problem-item">
+                            <div class="problem-icon"><i class="fas fa-mountain"></i></div>
+                            <div>
+                                <h4>Limited Access in Remote Areas</h4>
+                                <p>Rural and semi-urban regions face critical shortage of healthcare facilities.</p>
+                            </div>
+                        </div>
+                        <div class="problem-item">
+                            <div class="problem-icon"><i class="fas fa-question-circle"></i></div>
+                            <div>
+                                <h4>No Real-Time Information</h4>
+                                <p>Patients waste time visiting multiple pharmacies to find essential medicines.</p>
+                            </div>
+                        </div>
+                        <div class="problem-item">
+                            <div class="problem-icon"><i class="fas fa-exclamation-triangle"></i></div>
+                            <div>
+                                <h4>Delayed Treatments</h4>
+                                <p>Lack of centralized system leads to missed or delayed critical treatments.</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="solution-content">
+                    <div class="solution-box">
+                        <div class="solution-icon">
+                            <i class="fas fa-lightbulb"></i>
+                        </div>
+                        <h3>Our Solution</h3>
+                        <p>MedAssist Now is an intelligent real-time medicine availability and delivery system that ensures faster access to healthcare essentials.</p>
+                        <ul class="solution-features">
+                            <li><i class="fas fa-check"></i> Real-time medicine availability tracking</li>
+                            <li><i class="fas fa-check"></i> 24/7 emergency delivery service</li>
+                            <li><i class="fas fa-check"></i> Centralized digital platform</li>
+                            <li><i class="fas fa-check"></i> Connects patients, pharmacies & delivery partners</li>
+                            <li><i class="fas fa-check"></i> Automated inventory management</li>
+                            <li><i class="fas fa-check"></i> Rural area coverage</li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- How It Works -->
+    <section class="how-it-works" id="how-it-works">
+        <div class="container">
+            <div class="section-header">
+                <span class="section-label">Simple Process</span>
+                <h2>How MedAssist Now Works</h2>
+                <p>Get your medicines delivered in 4 simple steps</p>
+            </div>
+            
+            <div class="steps-grid">
+                <div class="step-card">
+                    <div class="step-number">01</div>
+                    <div class="step-icon">
+                        <i class="fas fa-search"></i>
+                    </div>
+                    <h3>Search Medicine</h3>
+                    <p>Enter medicine name and your location to check real-time availability across nearby pharmacies.</p>
+                </div>
+                
+                <div class="step-arrow">
+                    <i class="fas fa-arrow-right"></i>
+                </div>
+                
+                <div class="step-card">
+                    <div class="step-number">02</div>
+                    <div class="step-icon">
+                        <i class="fas fa-store-alt"></i>
+                    </div>
+                    <h3>Select Pharmacy</h3>
+                    <p>Choose from available pharmacies based on distance, price, and delivery time.</p>
+                </div>
+                
+                <div class="step-arrow">
+                    <i class="fas fa-arrow-right"></i>
+                </div>
+                
+                <div class="step-card">
+                    <div class="step-number">03</div>
+                    <div class="step-icon">
+                        <i class="fas fa-clipboard-check"></i>
+                    </div>
+                    <h3>Place Order</h3>
+                    <p>Upload prescription (if needed) and confirm your order with secure payment.</p>
+                </div>
+                
+                <div class="step-arrow">
+                    <i class="fas fa-arrow-right"></i>
+                </div>
+                
+                <div class="step-card">
+                    <div class="step-number">04</div>
+                    <div class="step-icon">
+                        <i class="fas fa-shipping-fast"></i>
+                    </div>
+                    <h3>Track & Receive</h3>
+                    <p>Track your delivery in real-time and receive medicines at your doorstep.</p>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- User Types Section -->
+    <section class="user-types">
+        <div class="container">
+            <div class="section-header">
+                <span class="section-label">Join Our Platform</span>
+                <h2>Who Can Use MedAssist Now?</h2>
+                <p>A comprehensive platform connecting all healthcare stakeholders</p>
+            </div>
+            
+            <div class="user-grid">
+                <div class="user-card">
+                    <div class="user-icon">
+                        <i class="fas fa-user-injured"></i>
+                    </div>
+                    <h3>Patients</h3>
+                    <p>Search and order medicines with real-time availability tracking</p>
+                    <ul class="user-features">
+                        <li><i class="fas fa-check"></i> 24/7 medicine search</li>
+                        <li><i class="fas fa-check"></i> Emergency delivery</li>
+                        <li><i class="fas fa-check"></i> Prescription upload</li>
+                        <li><i class="fas fa-check"></i> Order tracking</li>
+                        <li><i class="fas fa-check"></i> Price comparison</li>
+                    </ul>
+                    <a href="user/signup.html" class="btn btn-outline-primary">Register as Patient</a>
+                </div>
+                
+                <div class="user-card featured">
+                    <div class="featured-badge">Most Popular</div>
+                    <div class="user-icon">
+                        <i class="fas fa-store"></i>
+                    </div>
+                    <h3>Pharmacies</h3>
+                    <p>Manage inventory and reach more customers digitally</p>
+                    <ul class="user-features">
+                        <li><i class="fas fa-check"></i> Inventory management</li>
+                        <li><i class="fas fa-check"></i> Real-time updates</li>
+                        <li><i class="fas fa-check"></i> Order notifications</li>
+                        <li><i class="fas fa-check"></i> Analytics dashboard</li>
+                        <li><i class="fas fa-check"></i> Increased visibility</li>
+                    </ul>
+                    <a href="pharmacy/signup.html" class="btn btn-primary">Register Pharmacy</a>
+                </div>
+                
+                <div class="user-card">
+                    <div class="user-icon">
+                        <i class="fas fa-motorcycle"></i>
+                    </div>
+                    <h3>Delivery Partners</h3>
+                    <p>Earn by delivering essential medicines to patients</p>
+                    <ul class="user-features">
+                        <li><i class="fas fa-check"></i> Flexible working hours</li>
+                        <li><i class="fas fa-check"></i> Real-time orders</li>
+                        <li><i class="fas fa-check"></i> Navigation support</li>
+                        <li><i class="fas fa-check"></i> Instant payments</li>
+                        <li><i class="fas fa-check"></i> Performance tracking</li>
+                    </ul>
+                    <a href="delivery/signup.html" class="btn btn-outline-primary">Become a Partner</a>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Features Section -->
+    <section class="features-section" id="services">
+        <div class="container">
+            <div class="section-header">
+                <span class="section-label">Key Features</span>
+                <h2>Why Choose MedAssist Now?</h2>
+            </div>
+            
+            <div class="features-grid">
+                <div class="feature-card">
+                    <div class="feature-icon">
+                        <i class="fas fa-clock"></i>
+                    </div>
+                    <h3>24/7 Availability</h3>
+                    <p>Access medicines anytime, even during night hours and emergencies.</p>
+                </div>
+                
+                <div class="feature-card">
+                    <div class="feature-icon">
+                        <i class="fas fa-satellite-dish"></i>
+                    </div>
+                    <h3>Real-Time Tracking</h3>
+                    <p>Live inventory updates and delivery tracking from pharmacy to doorstep.</p>
+                </div>
+                
+                <div class="feature-card">
+                    <div class="feature-icon">
+                        <i class="fas fa-map-marked-alt"></i>
+                    </div>
+                    <h3>Rural Area Coverage</h3>
+                    <p>Serving remote and semi-urban regions with limited healthcare access.</p>
+                </div>
+                
+                <div class="feature-card">
+                    <div class="feature-icon">
+                        <i class="fas fa-ambulance"></i>
+                    </div>
+                    <h3>Emergency Delivery</h3>
+                    <p>Priority delivery for critical medicines during medical emergencies.</p>
+                </div>
+                
+                <div class="feature-card">
+                    <div class="feature-icon">
+                        <i class="fas fa-database"></i>
+                    </div>
+                    <h3>Centralized System</h3>
+                    <p>Single platform connecting patients, pharmacies, and delivery partners.</p>
+                </div>
+                
+                <div class="feature-card">
+                    <div class="feature-icon">
+                        <i class="fas fa-robot"></i>
+                    </div>
+                    <h3>Smart Automation</h3>
+                    <p>Automated inventory management and intelligent order routing.</p>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Track Order Section -->
+    <section class="track-order" id="track-order">
+        <div class="container">
+            <div class="track-content">
+                <div class="track-info">
+                    <span class="section-label">Real-Time Updates</span>
+                    <h2>Track Your Order</h2>
+                    <p>Get live updates on your medicine delivery from confirmation to doorstep.</p>
+                    <ul class="track-features">
+                        <li><i class="fas fa-check-circle"></i> Order confirmation notifications</li>
+                        <li><i class="fas fa-check-circle"></i> Pharmacy preparation status</li>
+                        <li><i class="fas fa-check-circle"></i> Live delivery partner location</li>
+                        <li><i class="fas fa-check-circle"></i> Estimated arrival time</li>
+                    </ul>
+                </div>
+                <div class="track-box">
+                    <h3>Enter Your Order ID</h3>
+                    <div class="track-input-group">
+                        <input type="text" placeholder="Enter Order ID (e.g., MED12345)">
+                        <a href="user/track.html" class="btn btn-primary">Track Order</a>
+                    </div>
+                    <div class="track-help">
+                        <i class="fas fa-info-circle"></i>
+                        <span>Order ID can be found in your confirmation email or SMS</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- About Section -->
+    <section class="about-section" id="about">
+        <div class="container">
+            <div class="section-header">
+                <span class="section-label">About Us</span>
+                <h2>About MedAssist Now</h2>
+                <p>Bridging the gap between patients and healthcare accessibility</p>
+            </div>
+            
+            <div class="about-content">
+                <div class="about-main">
+                    <div class="about-text">
+                        <h3>Our Mission</h3>
+                        <p>MedAssist Now is a college project aimed at revolutionizing healthcare accessibility through technology. Our mission is to ensure that no patient has to struggle to find essential medicines, especially during emergencies.</p>
+                        
+                        <h3>What We Do</h3>
+                        <p>We provide a comprehensive platform that connects patients with pharmacies in real-time, enabling:</p>
+                        <ul class="about-list">
+                            <li><i class="fas fa-check-circle"></i> Instant medicine availability checks across multiple pharmacies</li>
+                            <li><i class="fas fa-check-circle"></i> 24/7 emergency delivery services</li>
+                            <li><i class="fas fa-check-circle"></i> Real-time order tracking from pharmacy to doorstep</li>
+                            <li><i class="fas fa-check-circle"></i> Seamless coordination between patients, pharmacies, and delivery partners</li>
+                        </ul>
+                        
+                        <h3>Our Vision</h3>
+                        <p>To create a healthcare ecosystem where medicines are accessible to everyone, everywhere, anytime. This project demonstrates how technology can save lives by reducing the time between prescription and treatment.</p>
+                    </div>
+                </div>
+                
+                <div class="about-stats">
+                    <div class="about-stat-card">
+                        <div class="stat-icon"><i class="fas fa-users-medical"></i></div>
+                        <h4>For Patients</h4>
+                        <p>Quick access to medicine availability and emergency delivery services</p>
+                    </div>
+                    <div class="about-stat-card">
+                        <div class="stat-icon"><i class="fas fa-store-alt"></i></div>
+                        <h4>For Pharmacies</h4>
+                        <p>Digital platform to manage inventory and reach more customers</p>
+                    </div>
+                    <div class="about-stat-card">
+                        <div class="stat-icon"><i class="fas fa-shipping-fast"></i></div>
+                        <h4>For Delivery Partners</h4>
+                        <p>Flexible earning opportunities serving the healthcare sector</p>
+                    </div>
+                </div>
+                
+                <div class="about-tech">
+                    <h3>Project Information</h3>
+                    <p>This is an academic project developed to showcase:</p>
+                    <div class="tech-grid">
+                        <div class="tech-item">
+                            <i class="fas fa-code"></i>
+                            <span>Full-stack web development</span>
+                        </div>
+                        <div class="tech-item">
+                            <i class="fas fa-database"></i>
+                            <span>Real-time data management</span>
+                        </div>
+                        <div class="tech-item">
+                            <i class="fas fa-map-marked-alt"></i>
+                            <span>Location-based services</span>
+                        </div>
+                        <div class="tech-item">
+                            <i class="fas fa-mobile-alt"></i>
+                            <span>Responsive design</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Footer -->
+    <!-- <footer class="footer">
+        <div class="container">
+            <div class="footer-content">
+                <div class="footer-col">
+                    <div class="logo">
+                        <i class="fas fa-heartbeat"></i>
+                        <div class="logo-text">
+                            <span class="logo-main">MedAssist<span class="highlight">Now</span></span>
+                            <span class="logo-tagline">College Project</span>
+                        </div>
+                    </div>
+                    <p>A college project demonstrating real-time medicine availability and delivery system.</p>
+                </div>
+                
+                <div class="footer-col">
+                    <h4>Quick Links</h4>
+                    <ul>
+                        <li><a href="user/login.html">Patient Portal</a></li>
+                        <li><a href="pharmacy/login.html">Pharmacy Portal</a></li>
+                        <li><a href="delivery/login.html">Delivery Portal</a></li>
+                        <li><a href="admin/login.html">Admin Portal</a></li>
+                    </ul>
+                </div>
+                
+                <div class="footer-col">
+                    <h4>About Project</h4>
+                    <p>This is an academic project created for educational purposes to demonstrate a healthcare delivery system.</p>
+                </div>
+            </div>
+            
+            <div class="footer-bottom">
+                <p>&copy; 2025 MedAssist Now - College Project</p>
+            </div>
+        </div>
+    </footer> -->
+</body>
+</html>

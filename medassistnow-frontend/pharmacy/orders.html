@@ -1,0 +1,375 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Orders - MedAssist Now</title>
+    <link rel="stylesheet" href="../styles/dashboard-modern.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <style>
+        .tab-buttons {
+            display: flex;
+            gap: 15px;
+            margin-bottom: 25px;
+            border-bottom: 2px solid #f1f5f9;
+            padding-bottom: 15px;
+            flex-wrap: wrap;
+        }
+        
+        .tab-btn {
+            padding: 8px 20px;
+            border-radius: 8px;
+            border: none;
+            cursor: pointer;
+            font-weight: 500;
+            transition: all 0.3s;
+        }
+        
+        .tab-btn.active {
+            background: var(--gradient-primary);
+            color: white;
+        }
+        
+        .tab-btn:not(.active) {
+            background: #f1f5f9;
+            color: #64748b;
+        }
+        
+        .empty-state {
+            text-align: center;
+            padding: 60px 20px;
+            color: var(--text-secondary);
+        }
+        
+        .empty-state i {
+            font-size: 4rem;
+            margin-bottom: 20px;
+            opacity: 0.5;
+        }
+        
+        @media (max-width: 768px) {
+            .dashboard-header .header-content { flex-direction: column; gap: 15px; text-align: center; }
+            .header-actions { justify-content: center; }
+            .tab-buttons { justify-content: center; }
+            .data-table { font-size: 0.85rem; }
+            .data-table th, .data-table td { padding: 10px 8px; }
+        }
+        
+        @media (max-width: 480px) {
+            .dashboard-container { padding: 10px; }
+            .section-card { padding: 15px; }
+            .tab-btn { padding: 6px 12px; font-size: 0.85rem; }
+        }
+    </style>
+</head>
+<body data-required-role="pharmacy">
+    <script src="../js/config.js"></script>
+    <script>
+        (async function() {
+            const token = localStorage.getItem('token');
+            if (!token) { window.location.replace('login.html'); return; }
+            try {
+                const response = await fetch(`${API_CONFIG.BASE_URL}/auth/me`, { headers: { 'Authorization': `Bearer ${token}` } });
+                if (!response.ok) { localStorage.clear(); window.location.replace('login.html'); return; }
+                const data = await response.json();
+                if (data.data.user.role !== 'pharmacy') { alert('Access denied.'); localStorage.clear(); window.location.replace('login.html'); return; }
+                localStorage.setItem('userCache', JSON.stringify(data.data.user));
+            } catch (e) { console.error('Auth error:', e); localStorage.clear(); window.location.replace('login.html'); }
+        })();
+    </script>
+    
+    <div class="emergency-banner">
+        <div class="container">
+            <div class="banner-content">
+                <i class="fas fa-ambulance"></i>
+                <span>Priority orders from hospitals receive instant notifications!</span>
+                <a href="dashboard.html" class="emergency-btn">Dashboard</a>
+            </div>
+        </div>
+    </div>
+    
+    <div class="dashboard-container">
+        <div class="dashboard-header">
+            <div class="header-content">
+                <div class="user-welcome">
+                    <h1><i class="fas fa-shopping-bag"></i> Orders Management</h1>
+                    <p>Manage all pharmacy orders</p>
+                </div>
+                <div class="header-actions">
+                    <a href="dashboard.html" class="icon-btn"><i class="fas fa-home"></i></a>
+                    <a href="stock.html" class="icon-btn"><i class="fas fa-boxes"></i></a>
+                    <a href="profile.html" class="profile-btn" id="headerInitials">PH</a>
+                </div>
+            </div>
+        </div>
+        
+        <div class="dashboard-content">
+            <div class="section-card">
+                <div class="tab-buttons">
+                    <button class="tab-btn active" data-status="pending" onclick="filterOrders('pending')">
+                        Pending (<span id="pendingCount">0</span>)
+                    </button>
+                    <button class="tab-btn" data-status="processing" onclick="filterOrders('processing')">
+                        Processing (<span id="processingCount">0</span>)
+                    </button>
+                    <button class="tab-btn" data-status="completed" onclick="filterOrders('completed')">
+                        Completed (<span id="completedCount">0</span>)
+                    </button>
+                </div>
+                
+                <div class="table-container">
+                    <table class="data-table">
+                        <thead>
+                            <tr>
+                                <th>Order ID</th>
+                                <th>Customer</th>
+                                <th>Medicines</th>
+                                <th>Amount</th>
+                                <th>Order Time</th>
+                                <th>Status</th>
+                                <th>Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody id="ordersTableBody">
+                            <tr>
+                                <td colspan="7" style="text-align: center; padding: 40px;">
+                                    <i class="fas fa-spinner fa-spin" style="font-size: 2rem; color: var(--primary-color);"></i>
+                                    <p style="margin-top: 10px; color: var(--text-secondary);">Loading orders...</p>
+                                </td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <script src="../js/config.js"></script>
+    <script src="../js/auth.js"></script>
+    <script src="../js/api.js"></script>
+    <script src="../js/utils.js"></script>
+    <script src="https://cdn.socket.io/4.5.4/socket.io.min.js"></script>
+    <script>
+        let allOrders = [];
+        let currentFilter = 'pending';
+        let socket = null;
+        
+        document.addEventListener('DOMContentLoaded', function() {
+            const user = Auth.getUser();
+            if (user) {
+                const initials = (user.pharmacyName || user.name || 'PH').split(' ').map(n => n[0]).join('').toUpperCase().substring(0, 2);
+                document.getElementById('headerInitials').textContent = initials;
+                initializeSocketIO(user);
+                loadOrders();
+            }
+        });
+        
+        function initializeSocketIO(user) {
+            try {
+                socket = io(API_CONFIG.BASE_URL.replace('/api', ''), {
+                    transports: ['websocket', 'polling']
+                });
+                
+                socket.on('connect', () => {
+                    console.log('🔌 Connected to real-time updates');
+                    socket.emit('joinRoom', `pharmacy_${user._id || user.id}`);
+                });
+                
+                socket.on('newOrder', (data) => {
+                    console.log('🆕 New order received:', data);
+                    playNotificationSound();
+                    Utils.showToast(`New order received: #${data.order?._id?.slice(-6).toUpperCase()}`, 'success');
+                    loadOrders();
+                });
+                
+                socket.on('orderUpdated', () => {
+                    loadOrders();
+                });
+                
+                socket.on('disconnect', () => {
+                    console.log('🔌 Disconnected');
+                });
+            } catch (error) {
+                console.error('Socket.IO error:', error);
+            }
+        }
+        
+        function playNotificationSound() {
+            try {
+                const audio = new Audio('data:audio/wav;base64,UklGRnoGAABXQVZFZm10IBAAAAABAAEAQB8AAEAfAAABAAgAZGF0YQoGAACBhYqFbF1dcXOFhYqGdmd4hYuLiod8cnh+hIiJioZ+d3d9goaHh4V9dHR6foOGhYOAfHZ2en6Bg4OBfnp2dXl8f4GBf3x5dnR3en2Af396eHZ0dnh7fX9+fHp4dXR2eHt9fn18enl3dnZ4ent8fHt6eXh3dnd5ent7e3p5eHd3d3l6e3t6enl4d3d3eHp6e3p6eXh3d3d4eXp6enl5eHd3d3d4eXl5eXl4eHd3d3d4eXl5eXh4d3d3d3h4eXl5eHh4d3d3d3h4eHl4eHh4d3d3d3h4eHh4eHh4d3d3d3d4eHh4eHh3d3d3d3d4eHh4eHd3d3d3d3d4eHh4d3d3d3d3d3h4eHh3d3d3d3d3d3h4eHd3d3d3d3d3d3h4d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3');
+                audio.volume = 0.5;
+                audio.play().catch(() => {});
+            } catch (e) {}
+        }
+        
+        async function loadOrders() {
+            try {
+                const token = localStorage.getItem('token');
+                const response = await fetch(`${API_CONFIG.BASE_URL}/orders/pharmacy-orders`, {
+                    headers: { 'Authorization': `Bearer ${token}` }
+                });
+                
+                if (response.ok) {
+                    const data = await response.json();
+                    allOrders = data.data || [];
+                    updateCounts();
+                    displayOrders();
+                } else {
+                    showNoOrders();
+                }
+            } catch (error) {
+                console.error('Error loading orders:', error);
+                showNoOrders();
+            }
+        }
+        
+        function updateCounts() {
+            const pending = allOrders.filter(o => o.status === 'pending').length;
+            const processing = allOrders.filter(o => ['processing', 'packed', 'in_transit'].includes(o.status)).length;
+            const completed = allOrders.filter(o => ['delivered', 'completed', 'cancelled'].includes(o.status)).length;
+            
+            document.getElementById('pendingCount').textContent = pending;
+            document.getElementById('processingCount').textContent = processing;
+            document.getElementById('completedCount').textContent = completed;
+        }
+        
+        function filterOrders(status) {
+            currentFilter = status;
+            document.querySelectorAll('.tab-btn').forEach(btn => {
+                btn.classList.toggle('active', btn.dataset.status === status);
+            });
+            displayOrders();
+        }
+        
+        function displayOrders() {
+            const tbody = document.getElementById('ordersTableBody');
+            let filteredOrders = [];
+            
+            if (currentFilter === 'pending') {
+                filteredOrders = allOrders.filter(o => o.status === 'pending');
+            } else if (currentFilter === 'processing') {
+                filteredOrders = allOrders.filter(o => ['processing', 'packed', 'in_transit'].includes(o.status));
+            } else {
+                filteredOrders = allOrders.filter(o => ['delivered', 'completed', 'cancelled'].includes(o.status));
+            }
+            
+            if (filteredOrders.length === 0) {
+                tbody.innerHTML = `
+                    <tr>
+                        <td colspan="7">
+                            <div class="empty-state">
+                                <i class="fas fa-inbox"></i>
+                                <h3>No ${currentFilter} orders</h3>
+                                <p>Orders will appear here when customers place them</p>
+                            </div>
+                        </td>
+                    </tr>
+                `;
+                return;
+            }
+            
+            tbody.innerHTML = filteredOrders.map(order => {
+                const items = order.items?.map(i => `${i.medicine?.name || i.name} (${i.quantity})`).join('<br>') || 'Medicines';
+                const orderTime = new Date(order.createdAt);
+                const customer = order.user || order.customer || {};
+                
+                return `
+                    <tr>
+                        <td><strong>#${order.orderNumber || order._id?.slice(-8).toUpperCase()}</strong></td>
+                        <td>
+                            <div style="font-weight: 500;">${customer.name || 'Customer'}</div>
+                            <small style="color: #64748b;">${customer.phone || customer.email || ''}</small>
+                        </td>
+                        <td>${items}</td>
+                        <td><strong>₹${order.totalAmount || order.total || 0}</strong></td>
+                        <td>${orderTime.toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit' })}</td>
+                        <td><span class="badge badge-${getStatusColor(order.status)}">${getStatusText(order.status)}</span></td>
+                        <td>${getActionButtons(order)}</td>
+                    </tr>
+                `;
+            }).join('');
+        }
+        
+        function getActionButtons(order) {
+            if (order.status === 'pending') {
+                return `
+                    <button class="btn-primary" style="padding: 5px 15px; font-size: 14px;" onclick="updateOrderStatus('${order._id}', 'processing')">Accept</button>
+                    <button class="btn-outline" style="padding: 5px 15px; font-size: 14px; margin-left: 5px;" onclick="updateOrderStatus('${order._id}', 'cancelled')">Reject</button>
+                `;
+            } else if (['processing', 'packed'].includes(order.status)) {
+                return `
+                    <button class="btn-primary" style="padding: 5px 15px; font-size: 14px;" onclick="updateOrderStatus('${order._id}', 'packed')">Mark Packed</button>
+                `;
+            }
+            return `<span style="color: #64748b;">-</span>`;
+        }
+        
+        async function updateOrderStatus(orderId, newStatus) {
+            try {
+                const token = localStorage.getItem('token');
+                const response = await fetch(`${API_CONFIG.BASE_URL}/orders/${orderId}/status`, {
+                    method: 'PUT',
+                    headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` },
+                    body: JSON.stringify({ status: newStatus })
+                });
+                
+                if (response.ok) {
+                    Utils.showToast(`Order ${newStatus === 'cancelled' ? 'rejected' : 'updated'} successfully!`, 'success');
+                    loadOrders();
+                } else {
+                    Utils.showToast('Failed to update order', 'error');
+                }
+            } catch (error) {
+                Utils.showToast('Error updating order', 'error');
+            }
+        }
+        
+        function showNoOrders() {
+            document.getElementById('ordersTableBody').innerHTML = `
+                <tr>
+                    <td colspan="7">
+                        <div class="empty-state">
+                            <i class="fas fa-inbox"></i>
+                            <h3>No Orders Yet</h3>
+                            <p>Orders will appear here when customers place them</p>
+                        </div>
+                    </td>
+                </tr>
+            `;
+        }
+        
+        function getStatusText(status) {
+            const statusMap = {
+                'pending': 'Pending',
+                'processing': 'Processing',
+                'packed': 'Packed',
+                'in_transit': 'In Transit',
+                'delivered': 'Delivered',
+                'completed': 'Completed',
+                'cancelled': 'Cancelled'
+            };
+            return statusMap[status] || status;
+        }
+        
+        function getStatusColor(status) {
+            const colorMap = {
+                'pending': 'warning',
+                'processing': 'info',
+                'packed': 'info',
+                'in_transit': 'primary',
+                'delivered': 'success',
+                'completed': 'success',
+                'cancelled': 'danger'
+            };
+            return colorMap[status] || 'secondary';
+        }
+        
+        // Auto-refresh every 15 seconds
+        setInterval(() => {
+            if (document.visibilityState === 'visible') {
+                loadOrders();
+            }
+        }, 15000);
+    </script>
+</body>
+</html>

@@ -1,0 +1,522 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Medicine Stock - MedAssist Now</title>
+    <link rel="stylesheet" href="../styles/dashboard-modern.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <style>
+        .stock-stats {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 20px;
+            margin-bottom: 30px;
+        }
+        
+        .stat-card {
+            background: white;
+            border-radius: 15px;
+            padding: 25px;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.08);
+            text-align: center;
+        }
+        
+        .stat-card .icon {
+            width: 50px;
+            height: 50px;
+            border-radius: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin: 0 auto 15px;
+            font-size: 1.5rem;
+        }
+        
+        .stat-card .value {
+            font-size: 2rem;
+            font-weight: 700;
+            color: var(--text-primary);
+        }
+        
+        .stat-card .label {
+            color: var(--text-secondary);
+            font-size: 0.9rem;
+        }
+        
+        .stat-card.total .icon { background: #dbeafe; color: #2563eb; }
+        .stat-card.low .icon { background: #fef3c7; color: #d97706; }
+        .stat-card.critical .icon { background: #fee2e2; color: #dc2626; }
+        .stat-card.expired .icon { background: #f3e8ff; color: #9333ea; }
+        
+        .search-filters {
+            display: flex;
+            gap: 15px;
+            flex-wrap: wrap;
+            margin-bottom: 25px;
+        }
+        
+        .search-filters input,
+        .search-filters select {
+            padding: 12px 15px;
+            border: 2px solid #e5e7eb;
+            border-radius: 10px;
+            font-family: 'Poppins', sans-serif;
+        }
+        
+        .search-filters input {
+            flex: 1;
+            min-width: 250px;
+        }
+        
+        .data-table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+        
+        .data-table th,
+        .data-table td {
+            padding: 15px;
+            text-align: left;
+            border-bottom: 1px solid #e5e7eb;
+        }
+        
+        .data-table th {
+            background: #f8fafc;
+            font-weight: 600;
+            color: var(--text-primary);
+        }
+        
+        .data-table tr:hover {
+            background: #f8fafc;
+        }
+        
+        .badge {
+            padding: 5px 12px;
+            border-radius: 20px;
+            font-size: 0.8rem;
+            font-weight: 600;
+        }
+        
+        .badge-success { background: #d1fae5; color: #065f46; }
+        .badge-warning { background: #fef3c7; color: #92400e; }
+        .badge-danger { background: #fee2e2; color: #dc2626; }
+        
+        .action-btn {
+            padding: 8px 12px;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: all 0.3s;
+            margin-right: 5px;
+        }
+        
+        .action-btn.edit {
+            background: #dbeafe;
+            color: #2563eb;
+        }
+        
+        .action-btn.delete {
+            background: #fee2e2;
+            color: #dc2626;
+        }
+        
+        .action-btn:hover {
+            transform: scale(1.1);
+        }
+        
+        .empty-state {
+            text-align: center;
+            padding: 60px 20px;
+            color: var(--text-secondary);
+        }
+        
+        .empty-state i {
+            font-size: 4rem;
+            opacity: 0.3;
+            margin-bottom: 20px;
+        }
+        
+        @media (max-width: 768px) {
+            .search-filters {
+                flex-direction: column;
+            }
+            
+            .search-filters input,
+            .search-filters select {
+                width: 100%;
+            }
+            
+            .data-table {
+                display: block;
+                overflow-x: auto;
+            }
+        }
+    </style>
+</head>
+<body data-required-role="pharmacy">
+    <script src="../js/config.js"></script>
+    <script>
+        (async function() {
+            const token = localStorage.getItem('token');
+            if (!token) { window.location.replace('login.html'); return; }
+            try {
+                const response = await fetch(`${API_CONFIG.BASE_URL}/auth/me`, { headers: { 'Authorization': `Bearer ${token}` } });
+                if (!response.ok) { localStorage.clear(); window.location.replace('login.html'); return; }
+                const data = await response.json();
+                if (data.data.user.role !== 'pharmacy') { alert('Access denied.'); localStorage.clear(); window.location.replace('login.html'); return; }
+                localStorage.setItem('userCache', JSON.stringify(data.data.user));
+            } catch (e) { console.error('Auth error:', e); localStorage.clear(); window.location.replace('login.html'); }
+        })();
+    </script>
+    
+    <div class="emergency-banner">
+        <div class="container">
+            <div class="banner-content">
+                <i class="fas fa-ambulance"></i>
+                <span>Need medicines urgently? We're available 24/7 for emergency deliveries!</span>
+                <a href="../user/search.html" class="emergency-btn">Emergency Request</a>
+            </div>
+        </div>
+    </div>
+    
+    <div class="dashboard-container">
+        <div class="dashboard-header">
+            <div class="header-content">
+                <div class="user-welcome">
+                    <h1><i class="fas fa-boxes"></i> Medicine Stock</h1>
+                    <p>Manage your pharmacy inventory</p>
+                </div>
+                <div class="header-actions">
+                    <a href="dashboard.html" class="icon-btn"><i class="fas fa-home"></i></a>
+                    <a href="add-medicine.html" class="btn-primary" style="display: flex; align-items: center; gap: 8px;">
+                        <i class="fas fa-plus"></i> Add Medicine
+                    </a>
+                    <a href="profile.html" class="profile-btn" id="userInitials">P</a>
+                </div>
+            </div>
+        </div>
+        
+        <div class="dashboard-content">
+            <!-- Stock Stats -->
+            <div class="stock-stats">
+                <div class="stat-card total">
+                    <div class="icon"><i class="fas fa-pills"></i></div>
+                    <div class="value" id="totalMedicines">0</div>
+                    <div class="label">Total Medicines</div>
+                </div>
+                <div class="stat-card low">
+                    <div class="icon"><i class="fas fa-exclamation-triangle"></i></div>
+                    <div class="value" id="lowStock">0</div>
+                    <div class="label">Low Stock</div>
+                </div>
+                <div class="stat-card critical">
+                    <div class="icon"><i class="fas fa-times-circle"></i></div>
+                    <div class="value" id="outOfStock">0</div>
+                    <div class="label">Out of Stock</div>
+                </div>
+                <div class="stat-card expired">
+                    <div class="icon"><i class="fas fa-calendar-times"></i></div>
+                    <div class="value" id="expiringSoon">0</div>
+                    <div class="label">Expiring Soon</div>
+                </div>
+            </div>
+            
+            <!-- Medicines Table -->
+            <div class="section-card">
+                <div class="search-filters">
+                    <input type="text" id="searchInput" placeholder="Search medicines by name..." oninput="filterMedicines()">
+                    <select id="categoryFilter" onchange="filterMedicines()">
+                        <option value="">All Categories</option>
+                        <option value="Pain Relief">Pain Relief</option>
+                        <option value="Antibiotic">Antibiotic</option>
+                        <option value="Vitamin">Vitamin</option>
+                        <option value="Digestive">Digestive</option>
+                        <option value="Allergy">Allergy</option>
+                        <option value="prescription">Prescription</option>
+                        <option value="otc">OTC</option>
+                    </select>
+                    <select id="stockFilter" onchange="filterMedicines()">
+                        <option value="">All Stock Levels</option>
+                        <option value="instock">In Stock</option>
+                        <option value="low">Low Stock</option>
+                        <option value="out">Out of Stock</option>
+                    </select>
+                </div>
+                
+                <div style="overflow-x: auto;">
+                    <table class="data-table">
+                        <thead>
+                            <tr>
+                                <th>Medicine Name</th>
+                                <th>Category</th>
+                                <th>Price</th>
+                                <th>Stock</th>
+                                <th>Status</th>
+                                <th>Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody id="stockTableBody">
+                            <tr>
+                                <td colspan="6" class="empty-state">
+                                    <i class="fas fa-spinner fa-spin"></i>
+                                    <p>Loading inventory...</p>
+                                </td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- API Integration Scripts -->
+    <script src="../js/config.js"></script>
+    <script src="../js/auth.js"></script>
+    <script src="../js/api.js"></script>
+    <script src="../js/utils.js"></script>
+    <script>
+        let allInventory = [];
+        
+        document.addEventListener('DOMContentLoaded', function() {
+            initializeUserInfo();
+            loadInventory();
+        });
+        
+        function initializeUserInfo() {
+            const user = Auth.getUser();
+            if (user) {
+                const initialsEl = document.getElementById('userInitials');
+                if (initialsEl) {
+                    const name = user.pharmacyName || user.name || 'Pharmacy';
+                    initialsEl.textContent = name.split(' ').map(n => n[0]).join('').toUpperCase().substring(0, 2);
+                }
+            }
+        }
+        
+        async function loadInventory() {
+            try {
+                const user = Auth.getUser();
+                const pharmacyId = user._id || user.id;
+                const token = localStorage.getItem('token');
+                
+                // Load medicines directly (they contain stock data)
+                const medResponse = await fetch(`${API_CONFIG.BASE_URL}/medicines`, {
+                    headers: { 'Authorization': `Bearer ${token}` }
+                });
+                
+                if (medResponse.ok) {
+                    const medData = await medResponse.json();
+                    allInventory = medData.data?.medicines || medData.data || [];
+                    console.log('Loaded medicines:', allInventory.length);
+                } else {
+                    allInventory = [];
+                }
+                
+                updateStats();
+                displayInventory(allInventory);
+            } catch (error) {
+                console.error('Error loading inventory:', error);
+                document.getElementById('stockTableBody').innerHTML = `
+                    <tr>
+                        <td colspan="6" class="empty-state">
+                            <i class="fas fa-exclamation-circle"></i>
+                            <p>Failed to load inventory. <a href="#" onclick="loadInventory()">Retry</a></p>
+                        </td>
+                    </tr>
+                `;
+            }
+        }
+        
+        function updateStats() {
+            const total = allInventory.length;
+            const low = allInventory.filter(m => (m.stock || m.quantity || 0) > 0 && (m.stock || m.quantity || 0) <= 20).length;
+            const out = allInventory.filter(m => (m.stock || m.quantity || 0) === 0).length;
+            
+            // Check for items expiring in next 30 days
+            const today = new Date();
+            const thirtyDays = new Date(today.getTime() + 30 * 24 * 60 * 60 * 1000);
+            const expiring = allInventory.filter(m => {
+                if (!m.expiryDate) return false;
+                const expiry = new Date(m.expiryDate);
+                return expiry <= thirtyDays && expiry >= today;
+            }).length;
+            
+            document.getElementById('totalMedicines').textContent = total;
+            document.getElementById('lowStock').textContent = low;
+            document.getElementById('outOfStock').textContent = out;
+            document.getElementById('expiringSoon').textContent = expiring;
+        }
+        
+        function displayInventory(items) {
+            const tbody = document.getElementById('stockTableBody');
+            
+            if (!items || items.length === 0) {
+                tbody.innerHTML = `
+                    <tr>
+                        <td colspan="6" class="empty-state">
+                            <i class="fas fa-boxes"></i>
+                            <h3>No medicines in inventory</h3>
+                            <p>Start by adding medicines to your inventory</p>
+                            <a href="add-medicine.html" class="btn-primary" style="display: inline-block; margin-top: 15px;">
+                                <i class="fas fa-plus"></i> Add Medicine
+                            </a>
+                        </td>
+                    </tr>
+                `;
+                return;
+            }
+            
+            tbody.innerHTML = items.map(item => {
+                const stock = item.stock || item.quantity || 0;
+                const price = item.price || 0;
+                const name = item.name || item.medicineId?.name || 'Unknown';
+                const category = item.category || item.medicineId?.category || 'General';
+                
+                let statusBadge, statusClass;
+                if (stock === 0) {
+                    statusBadge = 'Out of Stock';
+                    statusClass = 'badge-danger';
+                } else if (stock <= 10) {
+                    statusBadge = 'Critical';
+                    statusClass = 'badge-danger';
+                } else if (stock <= 20) {
+                    statusBadge = 'Low Stock';
+                    statusClass = 'badge-warning';
+                } else {
+                    statusBadge = 'In Stock';
+                    statusClass = 'badge-success';
+                }
+                
+                const stockColor = stock === 0 ? '#dc2626' : stock <= 10 ? '#dc2626' : stock <= 20 ? '#d97706' : '#10b981';
+                
+                return `
+                    <tr data-id="${item._id || item.id}">
+                        <td>
+                            <div style="font-weight: 500;">${name}</div>
+                            <small style="color: #64748b;">${item.manufacturer || item.description || ''}</small>
+                        </td>
+                        <td>${category}</td>
+                        <td>₹${price.toFixed(2)}</td>
+                        <td><span style="color: ${stockColor}; font-weight: 500;">${stock} units</span></td>
+                        <td><span class="badge ${statusClass}">${statusBadge}</span></td>
+                        <td>
+                            <button class="action-btn edit" onclick="editItem('${item._id || item.id}')" title="Edit">
+                                <i class="fas fa-edit"></i>
+                            </button>
+                            <button class="action-btn delete" onclick="deleteItem('${item._id || item.id}')" title="Delete">
+                                <i class="fas fa-trash"></i>
+                            </button>
+                        </td>
+                    </tr>
+                `;
+            }).join('');
+        }
+        
+        function filterMedicines() {
+            const search = document.getElementById('searchInput').value.toLowerCase();
+            const category = document.getElementById('categoryFilter').value;
+            const stockLevel = document.getElementById('stockFilter').value;
+            
+            let filtered = allInventory;
+            
+            // Filter by search
+            if (search) {
+                filtered = filtered.filter(m => {
+                    const name = (m.name || m.medicineId?.name || '').toLowerCase();
+                    return name.includes(search);
+                });
+            }
+            
+            // Filter by category
+            if (category) {
+                filtered = filtered.filter(m => {
+                    const cat = (m.category || m.medicineId?.category || '').toLowerCase();
+                    return cat === category.toLowerCase();
+                });
+            }
+            
+            // Filter by stock level
+            if (stockLevel) {
+                filtered = filtered.filter(m => {
+                    const stock = m.stock || m.quantity || 0;
+                    if (stockLevel === 'instock') return stock > 20;
+                    if (stockLevel === 'low') return stock > 0 && stock <= 20;
+                    if (stockLevel === 'out') return stock === 0;
+                    return true;
+                });
+            }
+            
+            displayInventory(filtered);
+        }
+        
+        async function editItem(id) {
+            const item = allInventory.find(m => (m._id || m.id) === id);
+            if (!item) return;
+            
+            const newStock = prompt(`Enter new stock quantity for ${item.name || 'this item'}:`, item.stock || item.quantity || 0);
+            if (newStock === null) return;
+            
+            const stock = parseInt(newStock);
+            if (isNaN(stock) || stock < 0) {
+                Utils.showToast('Please enter a valid stock quantity', 'error');
+                return;
+            }
+            
+            try {
+                const token = localStorage.getItem('token');
+                // Use inventory endpoint to update stock by medicine ID
+                const response = await fetch(`${API_CONFIG.BASE_URL}/inventory/medicine/${id}`, {
+                    method: 'PUT',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Authorization': `Bearer ${token}`
+                    },
+                    body: JSON.stringify({ stock: stock })
+                });
+                
+                if (response.ok) {
+                    // Update local data immediately for real-time feedback
+                    const itemIndex = allInventory.findIndex(m => (m._id || m.id) === id);
+                    if (itemIndex !== -1) {
+                        allInventory[itemIndex].stock = stock;
+                        allInventory[itemIndex].quantity = stock;
+                    }
+                    updateStats();
+                    displayInventory(allInventory);
+                    Utils.showToast('Stock updated successfully!', 'success');
+                } else {
+                    const errorData = await response.json();
+                    Utils.showToast(errorData.message || 'Failed to update stock', 'error');
+                }
+            } catch (error) {
+                console.error('Error updating stock:', error);
+                Utils.showToast('Error updating stock', 'error');
+            }
+        }
+        
+        async function deleteItem(id) {
+            if (!confirm('Are you sure you want to delete this item from inventory?')) return;
+            
+            try {
+                const token = localStorage.getItem('token');
+                // Use medicines endpoint for deleting
+                const response = await fetch(`${API_CONFIG.BASE_URL}/medicines/${id}`, {
+                    method: 'DELETE',
+                    headers: { 'Authorization': `Bearer ${token}` }
+                });
+                
+                if (response.ok) {
+                    Utils.showToast('Item deleted successfully!', 'success');
+                    loadInventory();
+                } else {
+                    Utils.showToast('Failed to delete item', 'error');
+                }
+            } catch (error) {
+                console.error('Error deleting item:', error);
+                Utils.showToast('Error deleting item', 'error');
+            }
+        }
+    </script>
+</body>
+</html>

@@ -1,0 +1,665 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Search Medicines - MedAssist Now</title>
+    <link rel="stylesheet" href="../styles/dashboard-modern.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <style>
+        .search-hero {
+            background: linear-gradient(135deg, #0891b2 0%, #14b8a6 100%);
+            padding: 60px 30px;
+            text-align: center;
+            color: white;
+        }
+
+        .search-hero h1 {
+            font-size: 2.5rem;
+            margin-bottom: 15px;
+        }
+
+        .search-hero p {
+            font-size: 1.1rem;
+            opacity: 0.9;
+            margin-bottom: 40px;
+        }
+
+        .search-box-large {
+            max-width: 800px;
+            margin: 0 auto;
+            background: white;
+            padding: 30px;
+            border-radius: 20px;
+            box-shadow: 0 10px 40px rgba(0, 0, 0, 0.2);
+        }
+
+        .search-input-group {
+            display: flex;
+            gap: 15px;
+            margin-bottom: 20px;
+        }
+
+        .search-input-wrapper {
+            flex: 1;
+            position: relative;
+        }
+
+        .search-input-wrapper i {
+            position: absolute;
+            left: 20px;
+            top: 50%;
+            transform: translateY(-50%);
+            color: var(--primary-color);
+            font-size: 1.2rem;
+        }
+
+        .search-input {
+            width: 100%;
+            padding: 18px 20px 18px 55px;
+            border: 2px solid #e5e7eb;
+            border-radius: 12px;
+            font-size: 1.1rem;
+            font-family: 'Poppins', sans-serif;
+            transition: border-color 0.3s;
+        }
+
+        .search-input:focus {
+            outline: none;
+            border-color: var(--primary-color);
+        }
+
+        .location-btn {
+            padding: 18px 25px;
+            background: var(--gradient-accent);
+            color: white;
+            border: none;
+            border-radius: 12px;
+            cursor: pointer;
+            transition: transform 0.3s;
+            font-size: 1.1rem;
+        }
+
+        .location-btn:hover {
+            transform: scale(1.05);
+        }
+
+        .btn-search {
+            width: 100%;
+            padding: 18px;
+            background: var(--gradient-primary);
+            color: white;
+            border: none;
+            border-radius: 12px;
+            font-size: 1.2rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: transform 0.3s;
+        }
+
+        .btn-search:hover {
+            transform: translateY(-2px);
+        }
+        
+        .cart-badge {
+            position: absolute;
+            top: -5px;
+            right: -5px;
+            background: #ef4444;
+            color: white;
+            font-size: 0.7rem;
+            font-weight: 600;
+            padding: 2px 6px;
+            border-radius: 10px;
+            min-width: 18px;
+            text-align: center;
+        }
+        
+        /* List View Styles */
+        .medicine-grid.list-view {
+            grid-template-columns: 1fr;
+        }
+        
+        .medicine-grid.list-view .medicine-card {
+            display: flex;
+            align-items: center;
+            gap: 20px;
+            padding: 20px;
+        }
+        
+        .medicine-grid.list-view .medicine-header {
+            flex-shrink: 0;
+        }
+        
+        .medicine-grid.list-view .medicine-details {
+            flex: 1;
+            display: flex;
+            gap: 20px;
+            margin-bottom: 0;
+        }
+        
+        .medicine-grid.list-view .pharmacy-info {
+            flex: 1;
+            margin-bottom: 0;
+        }
+        
+        .medicine-grid.list-view .price-row {
+            flex-direction: column;
+            gap: 10px;
+            margin-bottom: 0;
+        }
+        
+        @media (max-width: 768px) {
+            .medicine-grid.list-view .medicine-card {
+                flex-direction: column;
+                align-items: stretch;
+            }
+            
+            .medicine-grid.list-view .medicine-details {
+                flex-direction: column;
+                gap: 5px;
+            }
+        }
+
+        .filters-section {
+            background: white;
+            padding: 25px;
+            border-radius: 15px;
+            margin-bottom: 30px;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.08);
+        }
+
+        .filters-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+        }
+
+        .filters-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 15px;
+        }
+
+        .filter-item label {
+            display: block;
+            margin-bottom: 8px;
+            color: var(--text-primary);
+            font-weight: 500;
+            font-size: 0.9rem;
+        }
+
+        .filter-select {
+            width: 100%;
+            padding: 12px;
+            border: 2px solid #e5e7eb;
+            border-radius: 10px;
+            font-family: 'Poppins', sans-serif;
+        }
+
+        .results-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 25px;
+        }
+
+        .results-count {
+            font-size: 1.2rem;
+            color: var(--text-primary);
+            font-weight: 600;
+        }
+
+        .view-toggle {
+            display: flex;
+            gap: 10px;
+        }
+
+        .toggle-btn {
+            width: 40px;
+            height: 40px;
+            border: 2px solid #e5e7eb;
+            background: white;
+            border-radius: 8px;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: all 0.3s;
+        }
+
+        .toggle-btn.active {
+            background: var(--gradient-primary);
+            color: white;
+            border-color: var(--primary-color);
+        }
+
+        .medicine-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+            gap: 20px;
+        }
+
+        .medicine-card {
+            background: white;
+            border-radius: 15px;
+            padding: 25px;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.08);
+            transition: transform 0.3s, box-shadow 0.3s;
+            border: 2px solid transparent;
+        }
+
+        .medicine-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 8px 25px rgba(0, 0, 0, 0.12);
+            border-color: var(--primary-color);
+        }
+
+        .medicine-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+            margin-bottom: 15px;
+        }
+
+        .medicine-icon {
+            width: 50px;
+            height: 50px;
+            background: var(--gradient-primary);
+            border-radius: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-size: 1.5rem;
+        }
+
+        .availability-badge {
+            padding: 6px 12px;
+            border-radius: 20px;
+            font-size: 0.8rem;
+            font-weight: 600;
+        }
+
+        .badge-available {
+            background: #d1fae5;
+            color: #065f46;
+        }
+
+        .badge-limited {
+            background: #fef3c7;
+            color: #92400e;
+        }
+
+        .medicine-name {
+            font-size: 1.3rem;
+            font-weight: 600;
+            color: var(--text-primary);
+            margin-bottom: 8px;
+        }
+
+        .medicine-details {
+            color: var(--text-secondary);
+            font-size: 0.9rem;
+            margin-bottom: 15px;
+        }
+
+        .medicine-details div {
+            margin-bottom: 5px;
+        }
+
+        .pharmacy-info {
+            background: linear-gradient(135deg, #f0f9ff 0%, #e0f2fe 100%);
+            padding: 15px;
+            border-radius: 10px;
+            margin-bottom: 15px;
+        }
+
+        .pharmacy-name {
+            font-weight: 600;
+            color: var(--text-primary);
+            margin-bottom: 5px;
+        }
+
+        .pharmacy-distance {
+            color: var(--text-secondary);
+            font-size: 0.85rem;
+        }
+
+        .price-row {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 15px;
+        }
+
+        .price {
+            font-size: 1.8rem;
+            font-weight: 700;
+            background: var(--gradient-primary);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+
+        .btn-add-cart {
+            flex: 1;
+            padding: 12px;
+            background: var(--gradient-primary);
+            color: white;
+            border: none;
+            border-radius: 10px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: transform 0.3s;
+        }
+
+        .btn-add-cart:hover {
+            transform: translateY(-2px);
+        }
+        
+        /* Cart Prompt Animation */
+        @keyframes slideInUp {
+            from {
+                transform: translateY(100px);
+                opacity: 0;
+            }
+            to {
+                transform: translateY(0);
+                opacity: 1;
+            }
+        }
+        
+        @keyframes slideOutDown {
+            from {
+                transform: translateY(0);
+                opacity: 1;
+            }
+            to {
+                transform: translateY(100px);
+                opacity: 0;
+            }
+        }
+        
+        .cart-prompt {
+            animation: slideInUp 0.3s ease;
+        }
+        
+        /* Responsive Cart Prompt */
+        @media (max-width: 480px) {
+            .cart-prompt {
+                left: 20px !important;
+                right: 20px !important;
+                max-width: calc(100% - 40px) !important;
+                flex-direction: column !important;
+            }
+        }
+        
+        /* Responsive Filters */
+        @media (max-width: 768px) {
+            .search-hero {
+                padding: 40px 20px;
+            }
+            
+            .search-hero h1 {
+                font-size: 1.8rem;
+            }
+            
+            .search-box-large {
+                padding: 20px;
+            }
+            
+            .search-input-group {
+                flex-direction: column;
+            }
+            
+            .filters-section {
+                padding: 20px;
+            }
+            
+            .filters-header {
+                flex-direction: column;
+                align-items: flex-start;
+                gap: 15px;
+            }
+            
+            .filters-header h3 {
+                margin: 0;
+            }
+            
+            .filters-grid {
+                grid-template-columns: 1fr 1fr;
+                gap: 12px;
+            }
+            
+            .results-header {
+                flex-direction: column;
+                align-items: flex-start;
+                gap: 15px;
+            }
+            
+            .medicine-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+        
+        @media (max-width: 480px) {
+            .search-hero h1 {
+                font-size: 1.5rem;
+            }
+            
+            .search-hero p {
+                font-size: 0.95rem;
+            }
+            
+            .filters-grid {
+                grid-template-columns: 1fr;
+            }
+            
+            .filter-select {
+                padding: 10px;
+                font-size: 0.9rem;
+            }
+            
+            .medicine-card {
+                padding: 20px;
+            }
+            
+            .medicine-name {
+                font-size: 1.1rem;
+            }
+            
+            .price {
+                font-size: 1.5rem;
+            }
+            
+            .price-row {
+                flex-direction: column;
+                gap: 15px;
+                align-items: stretch;
+            }
+            
+            .btn-add-cart {
+                width: 100%;
+            }
+        }
+    </style>
+</head>
+
+<body data-required-role="user">
+    <script src="../js/config.js"></script>
+    <script>
+        (async function() {
+            const token = localStorage.getItem('token');
+            if (!token) {
+                window.location.replace('login.html');
+                return;
+            }
+            try {
+                const response = await fetch(`${API_CONFIG.BASE_URL}/auth/me`, {
+                    headers: { 'Authorization': `Bearer ${token}` }
+                });
+                if (!response.ok) {
+                    localStorage.clear();
+                    window.location.replace('login.html');
+                    return;
+                }
+                const data = await response.json();
+                const user = data.data.user;
+                if (user.role !== 'user') {
+                    alert('Access denied. User role required.');
+                    localStorage.clear();
+                    window.location.replace('login.html');
+                    return;
+                }
+                localStorage.setItem('userCache', JSON.stringify(user));
+            } catch (e) {
+                console.error('Auth error:', e);
+                localStorage.clear();
+                window.location.replace('login.html');
+            }
+        })();
+    </script>
+    
+    <!-- Emergency Banner -->
+    <div class="emergency-banner">
+        <div class="container">
+            <div class="banner-content">
+                <i class="fas fa-ambulance"></i>
+                <span>Need medicines urgently? We're available 24/7 for emergency deliveries!</span>
+                <a href="search.html" class="emergency-btn">Emergency Request</a>
+            </div>
+        </div>
+    </div>
+
+    <!-- Dashboard Header -->
+    <div class="dashboard-header">
+        <div class="header-content">
+            <div class="user-welcome">
+                <h1><i class="fas fa-search-location"></i> Medicine Search</h1>
+                <p id="pharmacyCountText">Search from nearby pharmacies in real-time</p>
+            </div>
+            <div class="header-actions">
+                <a href="dashboard.html" class="icon-btn">
+                    <i class="fas fa-home"></i>
+                </a>
+                <a href="cart.html" class="icon-btn" style="position: relative;">
+                    <i class="fas fa-shopping-cart"></i>
+                    <span id="cartBadge" class="cart-badge" style="display: none;">0</span>
+                </a>
+                <a href="profile.html" class="profile-btn" id="userInitials">U</a>
+            </div>
+        </div>
+    </div>
+
+    <div class="dashboard-container">
+        <!-- Search Hero -->
+        <div class="search-hero">
+            <h1>Find Your Medicines</h1>
+            <p>Real-time availability across nearby pharmacies</p>
+
+            <div class="search-box-large">
+                <div class="search-input-group">
+                    <div class="search-input-wrapper">
+                        <i class="fas fa-pills"></i>
+                        <input type="text" id="searchInput" class="search-input" placeholder="Enter medicine name (e.g., Paracetamol)">
+                    </div>
+                    <button class="location-btn" title="Use my location">
+                        <i class="fas fa-crosshairs"></i>
+                    </button>
+                </div>
+                <button id="searchButton" class="btn-search">
+                    <i class="fas fa-search"></i> Search Availability
+                </button>
+            </div>
+        </div>
+
+        <div class="dashboard-content">
+            <!-- Filters -->
+            <div class="filters-section">
+                <div class="filters-header">
+                    <h3><i class="fas fa-filter"></i> Filter Results</h3>
+                    <button id="clearFilters" class="btn-outline" style="padding: 8px 16px; font-size: 0.9rem;">Clear All</button>
+                </div>
+
+                <div class="filters-grid">
+                    <div class="filter-item">
+                        <label>Distance</label>
+                        <select id="filterDistance" class="filter-select">
+                            <option value="1">Within 1 km</option>
+                            <option value="5">Within 5 km</option>
+                            <option value="10">Within 10 km</option>
+                            <option value="any">Any distance</option>
+                        </select>
+                    </div>
+
+                    <div class="filter-item">
+                        <label>Price Range</label>
+                        <select id="filterPrice" class="filter-select">
+                            <option value="any">Any price</option>
+                            <option value="0-50">Under ₹50</option>
+                            <option value="50-100">₹50 - ₹100</option>
+                            <option value="100-500">₹100 - ₹500</option>
+                            <option value="500+">Above ₹500</option>
+                        </select>
+                    </div>
+
+                    <div class="filter-item">
+                        <label>Availability</label>
+                        <select id="filterAvailability" class="filter-select">
+                            <option value="all">All</option>
+                            <option value="instock">In Stock</option>
+                            <option value="limited">Limited Stock</option>
+                            <option value="outofstock">Out of Stock</option>
+                        </select>
+                    </div>
+
+                    <div class="filter-item">
+                        <label>Sort By</label>
+                        <select id="filterSort" class="filter-select">
+                            <option value="distance">Distance (Nearest)</option>
+                            <option value="price-asc">Price (Low to High)</option>
+                            <option value="price-desc">Price (High to Low)</option>
+                            <option value="name">Name (A-Z)</option>
+                            <option value="stock">Stock (High to Low)</option>
+                        </select>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Results Section -->
+            <div class="section-card">
+                <div class="results-header">
+                    <div class="results-count" id="resultsCount">
+                        <i class="fas fa-spinner fa-spin" style="color: var(--primary-color);"></i>
+                        Loading medicines...
+                    </div>
+                    <div class="view-toggle">
+                        <button id="gridViewBtn" class="toggle-btn active" title="Grid View">
+                            <i class="fas fa-th"></i>
+                        </button>
+                        <button id="listViewBtn" class="toggle-btn" title="List View">
+                            <i class="fas fa-list"></i>
+                        </button>
+                    </div>
+                </div>
+
+                <div class="medicine-grid" id="medicinesList">
+                    <!-- Medicines will be loaded dynamically from backend -->
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- API Integration Scripts -->
+    <script src="../js/config.js"></script>
+    <script src="../js/auth.js"></script>
+    <script src="../js/api.js"></script>
+    <script src="../js/utils.js"></script>
+    <script src="../js/cart.js"></script>
+    <script src="../js/medicine.service.js"></script>
+    <script src="../js/pages/search.js"></script>
+</body>
+
+</html>

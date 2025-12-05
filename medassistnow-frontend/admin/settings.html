@@ -1,0 +1,160 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Settings - MedAssist Now</title>
+    <link rel="stylesheet" href="../styles/dashboard-modern.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+</head>
+<body data-required-role="admin">
+    <script src="../js/config.js"></script>
+    <script>
+        (async function() {
+            const token = localStorage.getItem('token');
+            if (!token) { window.location.replace('login.html'); return; }
+            try {
+                const response = await fetch(`${API_CONFIG.BASE_URL}/auth/me`, { headers: { 'Authorization': `Bearer ${token}` } });
+                if (!response.ok) { localStorage.clear(); window.location.replace('login.html'); return; }
+                const data = await response.json();
+                if (data.data.user.role !== 'admin') { alert('Access denied. Admin role required.'); localStorage.clear(); window.location.replace('login.html'); return; }
+                localStorage.setItem('userCache', JSON.stringify(data.data.user));
+            } catch (e) { console.error('Auth error:', e); localStorage.clear(); window.location.replace('login.html'); }
+        })();
+    </script>
+    <div class="emergency-banner">
+        <div class="container">
+            <div class="banner-content">
+                <i class="fas fa-ambulance"></i>
+                <span>Need medicines urgently? We're available 24/7 for emergency deliveries!</span>
+                <a href="../user/search.html" class="emergency-btn">Emergency Request</a>
+            </div>
+        </div>
+    </div>
+    <div class="dashboard-container">
+        <div class="dashboard-header">
+            <div class="header-content">
+                <div class="user-welcome">
+                    <h1><i class="fas fa-cog"></i> Platform Settings</h1>
+                    <p>Configure system settings and parameters</p>
+                </div>
+                <div class="header-actions">
+                    <a href="dashboard.html" class="icon-btn"><i class="fas fa-home"></i></a>
+                    <a href="system-logs.html" class="icon-btn"><i class="fas fa-clipboard-list"></i></a>
+                </div>
+            </div>
+        </div>
+        <div class="dashboard-content">
+            <div class="section-card" style="margin-bottom: 25px;">
+                <h2 class="section-title"><i class="fas fa-dollar-sign"></i> Commission & Fees</h2>
+                <form style="display: grid; grid-template-columns: 1fr 1fr; gap: 20px;">
+                    <div class="form-group">
+                        <label class="form-label">Pharmacy Commission (%)</label>
+                        <input type="number" class="form-input" value="5" step="0.1">
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">Delivery Partner Commission (%)</label>
+                        <input type="number" class="form-input" value="15" step="0.1">
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">Base Delivery Fee (₹)</label>
+                        <input type="number" class="form-input" value="40">
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">Per KM Charge (₹)</label>
+                        <input type="number" class="form-input" value="10">
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">Minimum Order Amount (₹)</label>
+                        <input type="number" class="form-input" value="100">
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">GST Rate (%)</label>
+                        <input type="number" class="form-input" value="18" step="0.1">
+                    </div>
+                    <button type="submit" class="btn-primary">
+                        <i class="fas fa-save"></i> Save Commission Settings
+                    </button>
+                </form>
+            </div>
+            <div class="section-card" style="margin-bottom: 25px;">
+                <h2 class="section-title"><i class="fas fa-phone"></i> Emergency Contact</h2>
+                <form style="display: grid; grid-template-columns: 1fr 1fr; gap: 20px;">
+                    <div class="form-group">
+                        <label class="form-label">Emergency Helpline</label>
+                        <input type="tel" class="form-input" value="+91 1800-XXX-XXXX">
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">Support Email</label>
+                        <input type="email" class="form-input" value="support@medassistnow.com">
+                    </div>
+                    <button type="submit" class="btn-primary">
+                        <i class="fas fa-save"></i> Save Contact Settings
+                    </button>
+                </form>
+            </div>
+            <div class="section-card" style="margin-bottom: 25px;">
+                <h2 class="section-title"><i class="fas fa-bell"></i> Notification Settings</h2>
+                <div style="padding: 20px 0;">
+                    <div style="display: flex; justify-content: space-between; padding: 15px 0; border-bottom: 1px solid #f1f5f9;">
+                        <div>
+                            <h4 style="margin-bottom: 5px;">Email Notifications</h4>
+                            <p style="color: #64748b; font-size: 14px;">Send email notifications for important updates</p>
+                        </div>
+                        <label style="position: relative; display: inline-block; width: 60px; height: 34px;">
+                            <input type="checkbox" checked style="opacity: 0; width: 0; height: 0;">
+                            <span style="position: absolute; cursor: pointer; top: 0; left: 0; right: 0; bottom: 0; background-color: #10b981; transition: .4s; border-radius: 34px;">
+                                <span style="position: absolute; content: ''; height: 26px; width: 26px; left: 4px; bottom: 4px; background-color: white; transition: .4s; border-radius: 50%;"></span>
+                            </span>
+                        </label>
+                    </div>
+                    <div style="display: flex; justify-content: space-between; padding: 15px 0; border-bottom: 1px solid #f1f5f9;">
+                        <div>
+                            <h4 style="margin-bottom: 5px;">SMS Notifications</h4>
+                            <p style="color: #64748b; font-size: 14px;">Send SMS for order updates</p>
+                        </div>
+                        <label style="position: relative; display: inline-block; width: 60px; height: 34px;">
+                            <input type="checkbox" checked style="opacity: 0; width: 0; height: 0;">
+                            <span style="position: absolute; cursor: pointer; top: 0; left: 0; right: 0; bottom: 0; background-color: #10b981; transition: .4s; border-radius: 34px;">
+                                <span style="position: absolute; content: ''; height: 26px; width: 26px; left: 4px; bottom: 4px; background-color: white; transition: .4s; border-radius: 50%;"></span>
+                            </span>
+                        </label>
+                    </div>
+                    <div style="display: flex; justify-content: space-between; padding: 15px 0;">
+                        <div>
+                            <h4 style="margin-bottom: 5px;">Push Notifications</h4>
+                            <p style="color: #64748b; font-size: 14px;">Send push notifications to mobile apps</p>
+                        </div>
+                        <label style="position: relative; display: inline-block; width: 60px; height: 34px;">
+                            <input type="checkbox" checked style="opacity: 0; width: 0; height: 0;">
+                            <span style="position: absolute; cursor: pointer; top: 0; left: 0; right: 0; bottom: 0; background-color: #10b981; transition: .4s; border-radius: 34px;">
+                                <span style="position: absolute; content: ''; height: 26px; width: 26px; left: 4px; bottom: 4px; background-color: white; transition: .4s; border-radius: 50%;"></span>
+                            </span>
+                        </label>
+                    </div>
+                </div>
+            </div>
+            <div class="section-card">
+                <h2 class="section-title"><i class="fas fa-clock"></i> System Maintenance</h2>
+                <div style="padding: 20px 0;">
+                    <div style="display: flex; justify-content: space-between; align-items: center; padding: 15px; background: #fef3c7; border-radius: 12px; margin-bottom: 15px;">
+                        <div>
+                            <h4 style="margin-bottom: 5px;">Scheduled Maintenance</h4>
+                            <p style="color: #64748b; font-size: 14px;">Tomorrow, 2:00 AM - 4:00 AM</p>
+                        </div>
+                        <button class="btn-outline" style="padding: 8px 20px;">Edit Schedule</button>
+                    </div>
+                    <div style="display: flex; gap: 15px;">
+                        <button class="btn-primary" style="flex: 1;">
+                            <i class="fas fa-database"></i> Backup Database
+                        </button>
+                        <button class="btn-outline" style="flex: 1;">
+                            <i class="fas fa-sync"></i> Clear Cache
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</body>
+</html>

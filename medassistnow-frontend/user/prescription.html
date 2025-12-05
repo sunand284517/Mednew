@@ -1,0 +1,749 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Upload Prescription - MedAssist Now</title>
+    <link rel="stylesheet" href="../styles/global.css">
+    <link rel="stylesheet" href="../styles/dashboard.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        .prescription-upload-container {
+            max-width: 900px;
+            margin: 20px auto;
+            padding: 40px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            border-radius: 20px;
+            box-shadow: 0 20px 60px rgba(102, 126, 234, 0.3);
+            position: relative;
+            overflow: hidden;
+        }
+
+        .prescription-upload-container::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: url("data:image/svg+xml,%3Csvg width='60' height='60' viewBox='0 0 60 60' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='none' fill-rule='evenodd'%3E%3Cg fill='%23ffffff' fill-opacity='0.05'%3E%3Cpath d='M36 34v-4h-2v4h-4v2h4v4h2v-4h4v-2h-4zm0-30V0h-2v4h-4v2h4v4h2V6h4V4h-4zM6 34v-4H4v4H0v2h4v4h2v-4h4v-2H6zM6 4V0H4v4H0v2h4v4h2V6h4V4H6z'/%3E%3C/g%3E%3C/g%3E%3C/svg%3E");
+            opacity: 0.1;
+        }
+
+        .page-header {
+            text-align: center;
+            color: white;
+            margin-bottom: 30px;
+            position: relative;
+            z-index: 1;
+        }
+
+        .page-header h2 {
+            font-size: 2.5rem;
+            margin-bottom: 10px;
+            font-weight: 700;
+        }
+
+        .page-header p {
+            font-size: 1.1rem;
+            opacity: 0.9;
+        }
+
+        .upload-card {
+            background: white;
+            border-radius: 16px;
+            padding: 30px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.1);
+            position: relative;
+            z-index: 1;
+        }
+
+        .upload-area {
+            border: 3px dashed #667eea;
+            border-radius: 16px;
+            padding: 60px 40px;
+            text-align: center;
+            background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
+            cursor: pointer;
+            transition: all 0.3s ease;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .upload-area::before {
+            content: '';
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            width: 0;
+            height: 0;
+            border-radius: 50%;
+            background: rgba(102, 126, 234, 0.1);
+            transition: all 0.5s ease;
+        }
+
+        .upload-area:hover::before {
+            width: 200%;
+            height: 200%;
+        }
+
+        .upload-area:hover {
+            border-color: #764ba2;
+            transform: translateY(-5px);
+            box-shadow: 0 10px 30px rgba(102, 126, 234, 0.2);
+        }
+
+        .upload-area.dragover {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            border-color: white;
+            color: white;
+        }
+
+        .upload-area.dragover .upload-icon,
+        .upload-area.dragover h3,
+        .upload-area.dragover p {
+            color: white;
+        }
+
+        .upload-icon {
+            font-size: 64px;
+            color: #667eea;
+            margin-bottom: 20px;
+            animation: float 3s ease-in-out infinite;
+        }
+
+        @keyframes float {
+            0%, 100% { transform: translateY(0); }
+            50% { transform: translateY(-10px); }
+        }
+
+        .upload-area h3 {
+            font-size: 1.5rem;
+            color: #333;
+            margin-bottom: 10px;
+            font-weight: 600;
+        }
+
+        .upload-area p {
+            color: #666;
+            font-size: 0.95rem;
+        }
+
+        .preview-container {
+            margin-top: 30px;
+            display: none;
+            animation: fadeInUp 0.5s ease;
+        }
+
+        @keyframes fadeInUp {
+            from {
+                opacity: 0;
+                transform: translateY(20px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .preview-header {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            margin-bottom: 15px;
+        }
+
+        .preview-header h3 {
+            color: #667eea;
+            font-size: 1.3rem;
+            font-weight: 600;
+        }
+
+        .preview-image {
+            max-width: 100%;
+            border-radius: 12px;
+            margin-bottom: 15px;
+            box-shadow: 0 5px 20px rgba(0,0,0,0.1);
+            border: 3px solid #f0f0f0;
+        }
+
+        .ocr-result {
+            background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
+            padding: 25px;
+            border-radius: 16px;
+            margin-top: 25px;
+            display: none;
+            animation: fadeInUp 0.5s ease;
+        }
+
+        .ocr-result h3 {
+            color: #667eea;
+            margin-bottom: 20px;
+            font-size: 1.4rem;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .extracted-text {
+            background: white;
+            padding: 20px;
+            border-radius: 12px;
+            white-space: pre-wrap;
+            font-family: 'Courier New', monospace;
+            max-height: 300px;
+            overflow-y: auto;
+            border: 2px solid #e0e0e0;
+            box-shadow: inset 0 2px 5px rgba(0,0,0,0.05);
+            line-height: 1.6;
+        }
+
+        .medicines-list {
+            margin-top: 20px;
+        }
+
+        .medicines-list h4 {
+            color: #667eea;
+            margin-bottom: 15px;
+            font-size: 1.2rem;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .medicine-item {
+            background: white;
+            padding: 15px 20px;
+            border-radius: 12px;
+            margin-bottom: 12px;
+            border-left: 4px solid #667eea;
+            box-shadow: 0 3px 10px rgba(0,0,0,0.05);
+            transition: all 0.3s ease;
+        }
+
+        .medicine-item:hover {
+            transform: translateX(5px);
+            box-shadow: 0 5px 20px rgba(102, 126, 234, 0.2);
+        }
+
+        .medicine-item strong {
+            color: #333;
+            font-size: 1.1rem;
+        }
+
+        .form-actions {
+            display: flex;
+            gap: 15px;
+            margin-top: 30px;
+        }
+
+        .btn {
+            flex: 1;
+            padding: 14px 28px;
+            border: none;
+            border-radius: 12px;
+            cursor: pointer;
+            font-weight: 600;
+            font-size: 1rem;
+            transition: all 0.3s ease;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+        }
+
+        .btn-primary {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            box-shadow: 0 5px 15px rgba(102, 126, 234, 0.3);
+        }
+
+        .btn-primary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 25px rgba(102, 126, 234, 0.4);
+        }
+
+        .btn-secondary {
+            background: white;
+            color: #667eea;
+            border: 2px solid #667eea;
+        }
+
+        .btn-secondary:hover {
+            background: #667eea;
+            color: white;
+            transform: translateY(-2px);
+        }
+
+        .loading-overlay {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(102, 126, 234, 0.95);
+            z-index: 9999;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .loading-content {
+            background: white;
+            padding: 50px;
+            border-radius: 20px;
+            text-align: center;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+        }
+
+        .spinner {
+            border: 6px solid #f3f3f3;
+            border-top: 6px solid #667eea;
+            border-radius: 50%;
+            width: 60px;
+            height: 60px;
+            animation: spin 1s linear infinite;
+            margin: 0 auto 20px;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        .loading-content p {
+            color: #667eea;
+            font-size: 1.1rem;
+            font-weight: 600;
+            margin: 10px 0;
+        }
+
+        .prescription-history {
+            margin-top: 50px;
+            position: relative;
+            z-index: 1;
+        }
+
+        .prescription-history > h2 {
+            color: white;
+            text-align: center;
+            margin-bottom: 30px;
+            font-size: 2rem;
+            font-weight: 700;
+        }
+
+        .history-item {
+            background: white;
+            padding: 25px;
+            border-radius: 16px;
+            margin-bottom: 20px;
+            box-shadow: 0 5px 20px rgba(0,0,0,0.1);
+            transition: all 0.3s ease;
+        }
+
+        .history-item:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 10px 30px rgba(102, 126, 234, 0.2);
+        }
+
+        .history-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 15px;
+        }
+
+        .history-date {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            color: #666;
+            font-weight: 500;
+        }
+
+        .status-badge {
+            padding: 8px 16px;
+            border-radius: 25px;
+            font-size: 0.85rem;
+            font-weight: 600;
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+        }
+
+        .status-badge::before {
+            content: '●';
+            font-size: 1.2rem;
+        }
+
+        .status-processed {
+            background: linear-gradient(135deg, #d4edda 0%, #c3e6cb 100%);
+            color: #155724;
+        }
+
+        .status-pending {
+            background: linear-gradient(135deg, #fff3cd 0%, #ffeaa7 100%);
+            color: #856404;
+        }
+
+        .status-fulfilled {
+            background: linear-gradient(135deg, #d1ecf1 0%, #bee5eb 100%);
+            color: #0c5460;
+        }
+
+        .history-item p {
+            color: #555;
+            line-height: 1.8;
+            margin: 8px 0;
+        }
+
+        .history-item strong {
+            color: #333;
+            font-weight: 600;
+        }
+
+        /* Smooth scrollbar */
+        .extracted-text::-webkit-scrollbar {
+            width: 8px;
+        }
+
+        .extracted-text::-webkit-scrollbar-track {
+            background: #f1f1f1;
+            border-radius: 10px;
+        }
+
+        .extracted-text::-webkit-scrollbar-thumb {
+            background: #667eea;
+            border-radius: 10px;
+        }
+
+        .extracted-text::-webkit-scrollbar-thumb:hover {
+            background: #764ba2;
+        }
+    </style>
+</head>
+<body>
+    <div class="dashboard-container">
+        <!-- Sidebar -->
+        <aside class="sidebar">
+            <div class="sidebar-header">
+                <h2><i class="fas fa-pills"></i> MedAssist Now</h2>
+            </div>
+            <nav class="sidebar-nav">
+                <a href="dashboard.html"><i class="fas fa-home"></i> Dashboard</a>
+                <a href="search.html"><i class="fas fa-search"></i> Search Medicines</a>
+                <a href="cart.html"><i class="fas fa-shopping-cart"></i> Cart</a>
+                <a href="prescription.html" class="active"><i class="fas fa-file-medical"></i> Upload Prescription</a>
+                <a href="track.html"><i class="fas fa-truck"></i> Track Order</a>
+                <a href="profile.html"><i class="fas fa-user"></i> Profile</a>
+            </nav>
+            <div class="sidebar-footer">
+                <button class="logout-btn" onclick="logout()">
+                    <i class="fas fa-sign-out-alt"></i> Logout
+                </button>
+            </div>
+        </aside>
+
+        <!-- Main Content -->
+        <main class="main-content">
+            <header class="main-header">
+                <h1>Upload Prescription</h1>
+                <div class="header-actions">
+                    <span class="user-name" id="userName">Loading...</span>
+                </div>
+            </header>
+
+            <div class="prescription-upload-container">
+                <div class="page-header">
+                    <h2><i class="fas fa-file-prescription"></i> Upload Your Prescription</h2>
+                    <p>📸 Take a photo or upload an image - Our AI will extract medicines using advanced OCR</p>
+                </div>
+
+                <div class="upload-card">
+                    <div class="upload-area" id="uploadArea">
+                        <div class="upload-icon">
+                            <i class="fas fa-cloud-upload-alt"></i>
+                        </div>
+                    <h3>Click or Drag to Upload</h3>
+                    <p>Supports: JPG, PNG, PDF (Max 5MB)</p>
+                    <input type="file" id="fileInput" accept="image/*,.pdf" style="display: none;">
+                </div>
+
+                <div class="preview-container" id="previewContainer">
+                    <div class="preview-header">
+                        <i class="fas fa-image" style="color: #667eea; font-size: 1.5rem;"></i>
+                        <h3>Image Preview</h3>
+                    </div>
+                    <img id="previewImage" class="preview-image" alt="Prescription Preview">
+                </div>
+
+                <div class="ocr-result" id="ocrResult">
+                    <h3><i class="fas fa-robot"></i> AI Extracted Information</h3>
+                    <div class="extracted-text" id="extractedText"></div>
+                    
+                    <div class="medicines-list" id="medicinesList"></div>
+                </div>
+
+                <div class="form-actions">
+                    <button class="btn btn-primary" id="uploadBtn" style="display: none;" onclick="uploadPrescription()">
+                        <i class="fas fa-paper-plane"></i> Submit Prescription
+                    </button>
+                    <button class="btn btn-secondary" onclick="resetForm()">
+                        <i class="fas fa-redo-alt"></i> Start Over
+                    </button>
+                </div>
+                </div>
+            </div>
+
+            <div class="prescription-history">
+                <h2><i class="fas fa-history"></i> Your Prescription History</h2>
+                <div id="prescriptionHistory"></div>
+            </div>
+        </main>
+    </div>
+
+    <!-- Loading Overlay -->
+    <div class="loading-overlay" id="loadingOverlay">
+        <div class="loading-content">
+            <div class="spinner"></div>
+            <p>Processing prescription with OCR...</p>
+            <p>This may take a few moments</p>
+        </div>
+    </div>
+
+    <script src="../js/config.js"></script>
+    <script src="../js/authCheck.js"></script>
+    <script>
+        let selectedFile = null;
+        let currentUser = null;
+
+        // Initialize
+        document.addEventListener('DOMContentLoaded', async () => {
+            await loadUserInfo();
+            await loadPrescriptionHistory();
+            setupUploadArea();
+        });
+
+        // Load user info
+        async function loadUserInfo() {
+            try {
+                const token = localStorage.getItem('token');
+                if (!token) return;
+
+                const response = await fetch(`${API_CONFIG.BASE_URL}/auth/me`, {
+                    headers: {
+                        'Authorization': `Bearer ${token}`,
+                        'Content-Type': 'application/json'
+                    }
+                });
+
+                if (response.ok) {
+                    const data = await response.json();
+                    currentUser = data.data.user;
+                    document.getElementById('userName').textContent = currentUser.name;
+                }
+            } catch (error) {
+                console.error('Error loading user info:', error);
+            }
+        }
+
+        // Setup upload area
+        function setupUploadArea() {
+            const uploadArea = document.getElementById('uploadArea');
+            const fileInput = document.getElementById('fileInput');
+
+            uploadArea.addEventListener('click', () => fileInput.click());
+
+            uploadArea.addEventListener('dragover', (e) => {
+                e.preventDefault();
+                uploadArea.classList.add('dragover');
+            });
+
+            uploadArea.addEventListener('dragleave', () => {
+                uploadArea.classList.remove('dragover');
+            });
+
+            uploadArea.addEventListener('drop', (e) => {
+                e.preventDefault();
+                uploadArea.classList.remove('dragover');
+                const file = e.dataTransfer.files[0];
+                handleFileSelect(file);
+            });
+
+            fileInput.addEventListener('change', (e) => {
+                const file = e.target.files[0];
+                handleFileSelect(file);
+            });
+        }
+
+        // Handle file selection
+        async function handleFileSelect(file) {
+            if (!file) return;
+
+            // Validate file type
+            if (!file.type.startsWith('image/')) {
+                alert('Please select an image file');
+                return;
+            }
+
+            // Validate file size (5MB)
+            if (file.size > 5 * 1024 * 1024) {
+                alert('File size must be less than 5MB');
+                return;
+            }
+
+            selectedFile = file;
+
+            // Show preview
+            const reader = new FileReader();
+            reader.onload = async (e) => {
+                const previewImage = document.getElementById('previewImage');
+                previewImage.src = e.target.result;
+                document.getElementById('previewContainer').style.display = 'block';
+                document.getElementById('uploadBtn').style.display = 'block';
+
+                // Auto-process OCR
+                await processOCR(e.target.result);
+            };
+            reader.readAsDataURL(file);
+        }
+
+        // Process OCR
+        async function processOCR(imageData) {
+            document.getElementById('loadingOverlay').style.display = 'flex';
+
+            try {
+                // Extract base64 data
+                const base64Data = imageData.split(',')[1];
+
+                const response = await fetch(`${API_CONFIG.BASE_URL}/prescriptions/upload`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Authorization': `Bearer ${localStorage.getItem('token')}`
+                    },
+                    body: JSON.stringify({
+                        userId: currentUser._id,
+                        imageData: base64Data,
+                        patientName: currentUser.name
+                    })
+                });
+
+                const data = await response.json();
+
+                if (data.success) {
+                    displayOCRResults(data.data.prescription);
+                    await loadPrescriptionHistory();
+                    alert('Prescription uploaded successfully!');
+                } else {
+                    alert('Failed to process prescription: ' + data.message);
+                }
+            } catch (error) {
+                console.error('OCR processing error:', error);
+                alert('Error processing prescription');
+            } finally {
+                document.getElementById('loadingOverlay').style.display = 'none';
+            }
+        }
+
+        // Display OCR results
+        function displayOCRResults(prescription) {
+            const ocrResult = document.getElementById('ocrResult');
+            const extractedText = document.getElementById('extractedText');
+            const medicinesList = document.getElementById('medicinesList');
+
+            ocrResult.style.display = 'block';
+
+            // Show extracted text
+            extractedText.innerHTML = `<p style="white-space: pre-wrap; line-height: 1.6;">${prescription.extractedText || 'No text extracted from the image.'}</p>`;
+
+            // Show medicines
+            if (prescription.medicines && prescription.medicines.length > 0) {
+                medicinesList.innerHTML = '<h4 style="color: #667eea; margin-bottom: 1rem;"><i class="fas fa-pills"></i> Detected Medicines</h4>';
+                prescription.medicines.forEach(med => {
+                    const div = document.createElement('div');
+                    div.className = 'medicine-item';
+                    div.innerHTML = `
+                        <div style="display: flex; align-items: center; gap: 0.5rem;">
+                            <i class="fas fa-prescription-bottle" style="color: #667eea;"></i>
+                            <strong>${med.name}</strong>
+                        </div>
+                        ${med.dosage ? `<div style="margin-left: 1.75rem; color: #555;">${med.dosage}</div>` : ''}
+                        ${med.frequency ? `<div style="margin-left: 1.75rem; color: #666; font-size: 0.9rem;">${med.frequency}</div>` : ''}
+                    `;
+                    medicinesList.appendChild(div);
+                });
+            } else {
+                medicinesList.innerHTML = '<p style="text-align: center; color: #666; padding: 1rem;"><i class="fas fa-info-circle"></i> No medicines detected. Please verify the text above or try a clearer image.</p>';
+            }
+        }
+
+        // Upload prescription (called by submit button)
+        function uploadPrescription() {
+            alert('Prescription has been submitted!');
+            resetForm();
+        }
+
+        // Reset form
+        function resetForm() {
+            selectedFile = null;
+            document.getElementById('fileInput').value = '';
+            document.getElementById('previewContainer').style.display = 'none';
+            document.getElementById('ocrResult').style.display = 'none';
+            document.getElementById('uploadBtn').style.display = 'none';
+        }
+
+        // Load prescription history
+        async function loadPrescriptionHistory() {
+            if (!currentUser) return;
+
+            try {
+                const response = await fetch(`${API_CONFIG.BASE_URL}/prescriptions/user/${currentUser._id}`, {
+                    headers: {
+                        'Authorization': `Bearer ${localStorage.getItem('token')}`
+                    }
+                });
+
+                const data = await response.json();
+
+                if (data.success) {
+                    displayPrescriptionHistory(data.data.prescriptions);
+                }
+            } catch (error) {
+                console.error('Error loading history:', error);
+            }
+        }
+
+        // Display prescription history
+        function displayPrescriptionHistory(prescriptions) {
+            const container = document.getElementById('prescriptionHistory');
+
+            if (prescriptions.length === 0) {
+                container.innerHTML = '<p style="text-align: center; color: #666; padding: 2rem;">No prescription history found</p>';
+                return;
+            }
+
+            container.innerHTML = prescriptions.map(p => `
+                <div class="history-item">
+                    <div class="history-header">
+                        <span class="history-date"><i class="fas fa-calendar-alt"></i> ${new Date(p.createdAt).toLocaleDateString('en-US', { weekday: 'short', year: 'numeric', month: 'short', day: 'numeric' })}</span>
+                        <span class="status-badge status-${p.status}">${p.status.toUpperCase()}</span>
+                    </div>
+                    <div style="margin-top: 0.75rem;">
+                        <p><strong><i class="fas fa-pills" style="color: #667eea;"></i> Medicines:</strong> ${p.medicines.map(m => m.name).join(', ') || 'N/A'}</p>
+                        ${p.notes ? `<p style="margin-top: 0.5rem;"><strong><i class="fas fa-comment-medical" style="color: #667eea;"></i> Notes:</strong> ${p.notes}</p>` : ''}
+                    </div>
+                </div>
+            `).join('');
+        }
+
+        // Logout
+        function logout() {
+            localStorage.removeItem('token');
+            localStorage.removeItem('user');
+            window.location.href = 'login.html';
+        }
+    </script>
+</body>
+</html>

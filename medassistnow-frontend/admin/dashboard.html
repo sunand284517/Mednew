@@ -1,0 +1,166 @@
+﻿<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Admin Dashboard - MedAssist Now</title>
+    <link rel="stylesheet" href="../styles/dashboard-modern.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+
+</head>
+
+<body data-required-role="admin">
+    <script src="../js/config.js"></script>
+    <script>
+        (async function() {
+            const token = localStorage.getItem('token');
+            if (!token) { window.location.replace('login.html'); return; }
+            try {
+                const response = await fetch(`${API_CONFIG.BASE_URL}/auth/me`, { headers: { 'Authorization': `Bearer ${token}` } });
+                if (!response.ok) { localStorage.clear(); window.location.replace('login.html'); return; }
+                const data = await response.json();
+                if (data.data.user.role !== 'admin') { alert('Access denied. Admin role required.'); localStorage.clear(); window.location.replace('login.html'); return; }
+                localStorage.setItem('userCache', JSON.stringify(data.data.user));
+            } catch (e) { console.error('Auth error:', e); localStorage.clear(); window.location.replace('login.html'); }
+        })();
+    </script>
+    <div class="emergency-banner">
+        <div class="container">
+            <div class="banner-content">
+                <i class="fas fa-ambulance"></i>
+                <span>Need medicines urgently? We're available 24/7 for emergency deliveries!</span>
+                <a href="../user/search.html" class="emergency-btn">Emergency Request</a>
+            </div>
+        </div>
+    </div>
+    <div class="dashboard-container">
+        <div class="dashboard-header">
+            <div class="header-content">
+                <div class="user-welcome">
+                    <h1><i class="fas fa-shield-alt"></i> Welcome, Admin</h1>
+                    <p>Monitor and manage platform operations</p>
+                </div>
+                <div class="header-actions">
+                    <a href="system-logs.html" class="icon-btn" title="System Logs"><i
+                            class="fas fa-clipboard-list"></i></a>
+                    <a href="analytics.html" class="icon-btn" title="Analytics"><i class="fas fa-chart-line"></i></a>
+                    <a href="settings.html" class="icon-btn" title="Settings"><i class="fas fa-cog"></i></a>
+                    <a href="../index.html" class="icon-btn" title="Home" style="background: var(--gradient-purple);"><i
+                            class="fas fa-home"></i></a>
+                    <button id="logoutBtn" class="icon-btn" title="Logout" style="background: linear-gradient(135deg, #ef4444 0%, #dc2626 100%);">
+                        <i class="fas fa-sign-out-alt"></i>
+                    </button>
+                </div>
+            </div>
+        </div>
+        <div class="dashboard-content">
+            <div class="quick-actions">
+                <a href="manage-users.html" class="action-card" style="background: var(--gradient-primary);">
+                    <i class="fas fa-users"></i>
+                    <h3>Manage Users</h3>
+                    <p>View all users</p>
+                </a>
+                <a href="manage-pharmacies.html" class="action-card" style="background: var(--gradient-accent);">
+                    <i class="fas fa-store"></i>
+                    <h3>Manage Pharmacies</h3>
+                    <p>Pharmacy approvals</p>
+                </a>
+                <a href="manage-delivery.html" class="action-card" style="background: var(--gradient-purple);">
+                    <i class="fas fa-motorcycle"></i>
+                    <h3>Delivery Partners</h3>
+                    <p>Partner management</p>
+                </a>
+                <a href="manage-orders.html" class="action-card" style="background: var(--gradient-success);">
+                    <i class="fas fa-shopping-bag"></i>
+                    <h3>Orders</h3>
+                    <p>View all orders</p>
+                </a>
+            </div>
+            <div class="stats-grid">
+                <div class="stat-card">
+                    <div class="stat-icon" style="background: var(--gradient-primary); color: white;">
+                        <i class="fas fa-users"></i>
+                    </div>
+                    <div class="stat-info">
+                        <h3 id="totalUsers">0</h3>
+                        <p>Total Users</p>
+                    </div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-icon" style="background: var(--gradient-accent); color: white;">
+                        <i class="fas fa-store"></i>
+                    </div>
+                    <div class="stat-info">
+                        <h3 id="totalPharmacies">0</h3>
+                        <p>Pharmacies</p>
+                    </div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-icon" style="background: var(--gradient-purple); color: white;">
+                        <i class="fas fa-motorcycle"></i>
+                    </div>
+                    <div class="stat-info">
+                        <h3 id="totalDeliveryPartners">0</h3>
+                        <p>Delivery Partners</p>
+                    </div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-icon" style="background: var(--gradient-success); color: white;">
+                        <i class="fas fa-rupee-sign"></i>
+                    </div>
+                    <div class="stat-info">
+                        <h3 id="totalRevenue">₹0</h3>
+                        <p>Total Revenue</p>
+                    </div>
+                </div>
+            </div>
+            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 25px;">
+                <div class="section-card">
+                    <h2 class="section-title"><i class="fas fa-chart-line"></i> Today's Overview</h2>
+                    <div style="padding: 15px 0;">
+                        <div
+                            style="display: flex; justify-content: space-between; padding: 12px 0; border-bottom: 1px solid #f1f5f9;">
+                            <span>New Orders</span>
+                            <strong style="color: #10b981;" id="newOrders">0</strong>
+                        </div>
+                        <div
+                            style="display: flex; justify-content: space-between; padding: 12px 0; border-bottom: 1px solid #f1f5f9;">
+                            <span>New Users</span>
+                            <strong style="color: #0891b2;" id="newUsers">0</strong>
+                        </div>
+                        <div
+                            style="display: flex; justify-content: space-between; padding: 12px 0; border-bottom: 1px solid #f1f5f9;">
+                            <span>Revenue</span>
+                            <strong style="color: #f59e0b;" id="todayRevenue">₹0</strong>
+                        </div>
+                        <div style="display: flex; justify-content: space-between; padding: 12px 0;">
+                            <span>Active Deliveries</span>
+                            <strong style="color: #667eea;" id="activeDeliveries">0</strong>
+                        </div>
+                    </div>
+                </div>
+                <div class="section-card">
+                    <h2 class="section-title"><i class="fas fa-exclamation-triangle"></i> System Alerts</h2>
+                    <div id="systemAlertsContainer"
+                        style="text-align: center; padding: 40px 15px; color: var(--text-secondary);">
+                        <i class="fas fa-check-circle"
+                            style="font-size: 3rem; opacity: 0.3; display: block; margin-bottom: 15px; color: var(--success-color);"></i>
+                        <p>No system alerts at the moment</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    <script>
+        // Logout functionality
+        document.getElementById('logoutBtn').addEventListener('click', function() {
+            if (confirm('Are you sure you want to logout?')) {
+                localStorage.clear();
+                window.location.href = 'login.html';
+            }
+        });
+    </script>
+</body>
+
+</html>

@@ -1,0 +1,465 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Patient Dashboard - MedAssist Now</title>
+    <link rel="stylesheet" href="../styles/dashboard-modern.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+</head>
+
+<body data-required-role="user">
+    <!-- Auth check with backend JWT verification -->
+    <script src="../js/config.js"></script>
+    <script>
+        // Enhanced authentication check with better error handling
+        (function() {
+            // Add loading indicator
+            document.body.style.opacity = '0.5';
+            document.body.style.pointerEvents = 'none';
+            
+            const token = localStorage.getItem('token');
+            const userRole = sessionStorage.getItem('userRole');
+            
+            // If we have a role in session storage and a token, proceed
+            if (token && userRole === 'user') {
+                console.log('Token and valid role found, proceeding to dashboard');
+                document.body.style.opacity = '1';
+                document.body.style.pointerEvents = 'auto';
+                return;
+            }
+            
+            // If no token, redirect to login
+            if (!token) {
+                console.log('No authentication token found, redirecting to login');
+                window.location.href = 'login.html';
+                return;
+            }
+
+            // Validate token with backend
+            console.log('Validating token with backend...');
+            fetch(`${API_CONFIG.BASE_URL}/auth/me`, {
+                method: 'GET',
+                headers: { 
+                    'Authorization': `Bearer ${token}`,
+                    'Content-Type': 'application/json'
+                },
+                credentials: 'same-origin'
+            })
+            .then(response => {
+                if (!response.ok) {
+                    throw new Error('Authentication failed: ' + response.status);
+                }
+                return response.json();
+            })
+            .then(data => {
+                if (!data || !data.data || !data.data.user) {
+                    throw new Error('Invalid user data received');
+                }
+                
+                const user = data.data.user;
+                console.log('User authenticated:', user);
+                
+                // Store user role in session storage
+                sessionStorage.setItem('userRole', user.role);
+                
+                // Check role
+                if (user.role !== 'user') {
+                    console.log('Insufficient permissions, redirecting to login');
+                    throw new Error('Insufficient permissions');
+                }
+                
+                // If we got here, authentication is successful
+                document.body.style.opacity = '1';
+                document.body.style.pointerEvents = 'auto';
+                console.log('Authentication successful, showing dashboard');
+                
+                // Cache user for page display
+                localStorage.setItem('user', JSON.stringify(user));
+                localStorage.setItem('userCache', JSON.stringify(user));
+            })
+            .catch(error => {
+                console.error('Authentication error:', error);
+                sessionStorage.setItem('authJustFailed', 'true');
+                localStorage.clear();
+                window.location.replace('login.html');
+            });
+        })();
+    </script>
+    <!-- Emergency Banner -->
+    <div class="emergency-banner">
+        <div class="container">
+            <div class="banner-content">
+                <i class="fas fa-ambulance"></i>
+                <span>Need medicines urgently? We're available 24/7 for emergency deliveries!</span>
+                <a href="search.html" class="emergency-btn">Emergency Request</a>
+            </div>
+        </div>
+    </div>
+
+    <div class="dashboard-container">
+        <!-- Dashboard Header -->
+        <div class="dashboard-header">
+            <div class="header-content">
+                <div class="user-welcome">
+                    <h1><i class="fas fa-heartbeat"></i> Welcome Back, <span id="userName">User</span>!</h1>
+                    <p>Your health is our priority. Find medicines instantly.</p>
+                </div>
+                <div class="header-actions">
+                    <a href="search.html" class="icon-btn" title="Search Medicines">
+                        <i class="fas fa-search"></i>
+                    </a>
+                    <div class="notification-wrapper" style="position: relative;">
+                        <button class="icon-btn" title="Notifications" id="notificationBtn" onclick="toggleNotifications()">
+                            <i class="fas fa-bell"></i>
+                            <span class="notif-badge" id="notifBadge" style="display: none; position: absolute; top: -5px; right: -5px; background: #ef4444; color: white; font-size: 10px; font-weight: bold; padding: 2px 6px; border-radius: 10px; min-width: 16px; text-align: center;">0</span>
+                        </button>
+                        <div class="notification-dropdown" id="notificationDropdown" style="display: none; position: absolute; top: 100%; right: 0; width: 320px; max-height: 400px; overflow-y: auto; background: white; border-radius: 12px; box-shadow: 0 10px 40px rgba(0,0,0,0.15); z-index: 1000; margin-top: 10px;">
+                            <div style="padding: 15px; border-bottom: 1px solid #f1f5f9; font-weight: 600; color: #1e293b;">
+                                <i class="fas fa-bell"></i> Notifications
+                            </div>
+                            <div id="notificationList" style="padding: 10px;">
+                                <div style="text-align: center; padding: 20px; color: #94a3b8;">
+                                    <i class="fas fa-bell-slash" style="font-size: 2rem; margin-bottom: 10px; display: block;"></i>
+                                    No notifications yet
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <a href="profile.html" class="profile-btn" id="userInitials" title="Profile">
+                        U
+                    </a>
+                    <a href="../index.html" class="icon-btn" title="Home" style="background: var(--gradient-purple);">
+                        <i class="fas fa-home"></i>
+                    </a>
+                    <button id="logoutBtn" class="icon-btn" title="Logout" style="background: linear-gradient(135deg, #ef4444 0%, #dc2626 100%);">
+                        <i class="fas fa-sign-out-alt"></i>
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Dashboard Content -->
+        <div class="dashboard-content">
+            <!-- Quick Actions -->
+            <div class="quick-actions">
+                <a href="search.html" class="action-card">
+                    <div class="action-icon">
+                        <i class="fas fa-search-location"></i>
+                    </div>
+                    <h3>Search Medicines</h3>
+                    <p>Find real-time availability across nearby pharmacies</p>
+                </a>
+
+                <a href="cart.html" class="action-card">
+                    <div class="action-icon">
+                        <i class="fas fa-shopping-cart"></i>
+                    </div>
+                    <h3>My Cart</h3>
+                    <p>View your cart items</p>
+                </a>
+
+                <a href="prescription.html" class="action-card">
+                    <div class="action-icon">
+                        <i class="fas fa-file-medical"></i>
+                    </div>
+                    <h3>Upload Prescription</h3>
+                    <p>Upload and extract medicines with OCR</p>
+                </a>
+
+                <a href="track.html" class="action-card">
+                    <div class="action-icon">
+                        <i class="fas fa-map-marked-alt"></i>
+                    </div>
+                    <h3>Track Orders</h3>
+                    <p>Real-time tracking of your deliveries</p>
+                </a>
+
+                <a href="profile.html" class="action-card">
+                    <div class="action-icon">
+                        <i class="fas fa-user-circle"></i>
+                    </div>
+                    <h3>My Profile</h3>
+                    <p>Manage your account & prescriptions</p>
+                </a>
+            </div>
+
+            <!-- Statistics -->
+            <div class="stats-grid" id="statsContainer">
+                <div class="stat-card">
+                    <div class="stat-value" id="totalOrders">0</div>
+                    <div class="stat-label">Total Orders</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-value" id="activeOrders">0</div>
+                    <div class="stat-label">Active Orders</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-value" id="totalSpent">₹0</div>
+                    <div class="stat-label">Total Spent</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-value" id="savedPharmacies">0</div>
+                    <div class="stat-label">Saved Pharmacies</div>
+                </div>
+            </div>
+
+            <!-- Recent Orders -->
+            <div class="section-card">
+                <div class="section-header">
+                    <h2 class="section-title">
+                        <i class="fas fa-box"></i>
+                        Recent Orders
+                    </h2>
+                    <a href="track.html" class="view-all-btn">
+                        View All <i class="fas fa-arrow-right"></i>
+                    </a>
+                </div>
+
+                <div class="table-container">
+                    <table class="data-table">
+                        <thead>
+                            <tr>
+                                <th>Order ID</th>
+                                <th>Medicine</th>
+                                <th>Pharmacy</th>
+                                <th>Status</th>
+                                <th>Date</th>
+                                <th>Action</th>
+                            </tr>
+                        </thead>
+                        <tbody id="recentOrdersTable">
+                            <tr>
+                                <td colspan="6"
+                                    style="text-align: center; padding: 40px; color: var(--text-secondary);">
+                                    <i class="fas fa-box"
+                                        style="font-size: 3rem; opacity: 0.3; display: block; margin-bottom: 15px;"></i>
+                                    No recent orders found
+                                </td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
+            <!-- Nearby Pharmacies -->
+            <div class="section-card">
+                <div class="section-header">
+                    <h2 class="section-title">
+                        <i class="fas fa-store-alt"></i>
+                        Nearby Pharmacies
+                    </h2>
+                    <a href="search.html" class="view-all-btn">
+                        Explore All <i class="fas fa-arrow-right"></i>
+                    </a>
+                </div>
+
+                <div class="quick-actions" style="margin-bottom: 0;" id="nearbyPharmacies">
+                    <div style="text-align: center; padding: 40px; color: var(--text-secondary); grid-column: 1 / -1;">
+                        <i class="fas fa-store-alt"
+                            style="font-size: 3rem; opacity: 0.3; display: block; margin-bottom: 15px;"></i>
+                        <p>No nearby pharmacies found. Enable location to see pharmacies near you.</p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Recommended Actions -->
+            <div class="section-card">
+                <div class="section-header">
+                    <h2 class="section-title">
+                        <i class="fas fa-lightbulb"></i>
+                        Recommended for You
+                    </h2>
+                </div>
+
+                <div style="display: flex; gap: 15px; flex-wrap: wrap;">
+                    <a href="search.html" class="btn-primary">
+                        <i class="fas fa-search"></i>
+                        Search New Medicines
+                    </a>
+                    <a href="profile.html" class="btn-secondary">
+                        <i class="fas fa-file-prescription"></i>
+                        Upload Prescription
+                    </a>
+                    <a href="track.html" class="btn-outline">
+                        <i class="fas fa-history"></i>
+                        View Order History
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- API Integration Scripts -->
+    <script src="../js/auth.js"></script>
+    <script src="../js/api.js"></script>
+    <script src="../js/utils.js"></script>
+    <script src="../js/order.service.js"></script>
+    <script src="../js/notification.service.js"></script>
+    <script src="../js/pages/user-dashboard.js"></script>
+    <script src="https://cdn.socket.io/4.5.4/socket.io.min.js"></script>
+    <script>
+        let socket = null;
+        let notifications = [];
+        
+        // Initialize notifications and Socket.IO
+        document.addEventListener('DOMContentLoaded', async function() {
+            const user = Auth.getUser();
+            if (user) {
+                await loadNotificationsFromServer();
+                initializeSocketIO(user);
+                NotificationService.requestPermission();
+            }
+        });
+        
+        function initializeSocketIO(user) {
+            try {
+                socket = io(API_CONFIG.BASE_URL.replace('/api', ''), {
+                    transports: ['websocket', 'polling']
+                });
+                
+                socket.on('connect', () => {
+                    console.log('🔌 Connected to real-time updates');
+                    socket.emit('joinRoom', `user_${user._id || user.id}`);
+                });
+                
+                socket.on('orderConfirmed', (data) => {
+                    console.log('✅ Order confirmed:', data);
+                    NotificationService.playSound();
+                    Utils.showToast(data.message || 'Order placed successfully!', 'success');
+                    loadNotificationsFromServer();
+                });
+                
+                socket.on('orderStatusUpdate', (data) => {
+                    console.log('📦 Order status update:', data);
+                    NotificationService.playSound();
+                    Utils.showToast(`Order status: ${data.status}`, 'info');
+                    loadNotificationsFromServer();
+                    // Reload orders
+                    if (typeof loadUserOrders === 'function') loadUserOrders();
+                });
+                
+                socket.on('disconnect', () => {
+                    console.log('🔌 Disconnected from real-time updates');
+                });
+            } catch (error) {
+                console.error('Socket.IO error:', error);
+            }
+        }
+        
+        async function loadNotificationsFromServer() {
+            try {
+                const data = await NotificationService.getNotifications(20);
+                notifications = data.notifications.map(n => ({
+                    id: n._id,
+                    title: n.title,
+                    message: n.message,
+                    time: n.createdAt,
+                    read: n.read,
+                    orderId: n.data?.orderId
+                }));
+                updateNotificationBadge();
+                updateNotificationList();
+            } catch (error) {
+                console.error('Error loading notifications:', error);
+            }
+        }
+        
+        function updateNotificationBadge() {
+            const unreadCount = notifications.filter(n => !n.read).length;
+            const badge = document.getElementById('notifBadge');
+            
+            if (badge) {
+                if (unreadCount > 0) {
+                    badge.textContent = unreadCount > 9 ? '9+' : unreadCount;
+                    badge.style.display = 'block';
+                } else {
+                    badge.style.display = 'none';
+                }
+            }
+        }
+        
+        function updateNotificationList() {
+            const container = document.getElementById('notificationList');
+            if (!container) return;
+            
+            if (notifications.length === 0) {
+                container.innerHTML = `
+                    <div style="text-align: center; padding: 20px; color: #94a3b8;">
+                        <i class="fas fa-bell-slash" style="font-size: 2rem; margin-bottom: 10px; display: block;"></i>
+                        No notifications yet
+                    </div>
+                `;
+                return;
+            }
+            
+            container.innerHTML = `
+                <div style="padding: 5px 10px; text-align: right; border-bottom: 1px solid #f1f5f9;">
+                    <button onclick="markAllNotificationsRead()" style="background: none; border: none; color: #3b82f6; cursor: pointer; font-size: 12px;">
+                        Mark all as read
+                    </button>
+                </div>
+            ` + notifications.slice(0, 10).map(notif => `
+                <div style="padding: 12px; border-bottom: 1px solid #f1f5f9; cursor: pointer; ${!notif.read ? 'background: #f0f9ff;' : ''}" onclick="handleNotificationClick('${notif.id}', '${notif.orderId || ''}')">
+                    <div style="font-weight: 500; color: #1e293b; margin-bottom: 4px;">
+                        ${notif.title}
+                    </div>
+                    <div style="font-size: 0.85rem; color: #64748b; margin-bottom: 4px;">
+                        ${notif.message}
+                    </div>
+                    <div style="font-size: 0.75rem; color: #94a3b8;">
+                        ${NotificationService.getTimeAgo(notif.time)}
+                    </div>
+                </div>
+            `).join('');
+        }
+        
+        function toggleNotifications() {
+            const dropdown = document.getElementById('notificationDropdown');
+            if (dropdown) {
+                dropdown.style.display = dropdown.style.display === 'none' ? 'block' : 'none';
+            }
+        }
+        
+        async function handleNotificationClick(notifId, orderId) {
+            await NotificationService.markAsRead(notifId);
+            const notif = notifications.find(n => n.id === notifId);
+            if (notif) {
+                notif.read = true;
+                updateNotificationBadge();
+                updateNotificationList();
+            }
+            if (orderId) {
+                window.location.href = `track.html?order=${orderId}`;
+            }
+        }
+        
+        async function markAllNotificationsRead() {
+            await NotificationService.markAllAsRead();
+            notifications.forEach(n => n.read = true);
+            updateNotificationBadge();
+            updateNotificationList();
+            Utils.showToast('All notifications marked as read', 'success');
+        }
+        
+        // Close dropdown when clicking outside
+        document.addEventListener('click', function(e) {
+            const wrapper = document.querySelector('.notification-wrapper');
+            const dropdown = document.getElementById('notificationDropdown');
+            if (wrapper && dropdown && !wrapper.contains(e.target)) {
+                dropdown.style.display = 'none';
+            }
+        });
+        
+        // Logout functionality
+        document.getElementById('logoutBtn').addEventListener('click', function() {
+            if (confirm('Are you sure you want to logout?')) {
+                Auth.logout();
+                window.location.href = 'login.html';
+            }
+        });
+    </script>
+</body>
+
+</html>

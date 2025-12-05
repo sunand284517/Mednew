@@ -1,0 +1,450 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Analytics - MedAssist Now</title>
+    <link rel="stylesheet" href="../styles/dashboard-modern.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+</head>
+<body data-required-role="admin">
+    <script src="../js/config.js"></script>
+    <script>
+        (async function() {
+            const token = localStorage.getItem('token');
+            if (!token) { window.location.replace('login.html'); return; }
+            try {
+                const response = await fetch(`${API_CONFIG.BASE_URL}/auth/me`, { headers: { 'Authorization': `Bearer ${token}` } });
+                if (!response.ok) { localStorage.clear(); window.location.replace('login.html'); return; }
+                const data = await response.json();
+                if (data.data.user.role !== 'admin') { alert('Access denied. Admin role required.'); localStorage.clear(); window.location.replace('login.html'); return; }
+                localStorage.setItem('userCache', JSON.stringify(data.data.user));
+            } catch (e) { console.error('Auth error:', e); localStorage.clear(); window.location.replace('login.html'); }
+        })();
+    </script>
+    <div class="emergency-banner">
+        <div class="container">
+            <div class="banner-content">
+                <i class="fas fa-ambulance"></i>
+                <span>Need medicines urgently? We're available 24/7 for emergency deliveries!</span>
+                <a href="../user/search.html" class="emergency-btn">Emergency Request</a>
+            </div>
+        </div>
+    </div>
+    <div class="dashboard-container">
+        <div class="dashboard-header">
+            <div class="header-content">
+                <div class="user-welcome">
+                    <h1><i class="fas fa-chart-line"></i> Analytics</h1>
+                    <p>Platform performance and insights</p>
+                </div>
+                <div class="header-actions">
+                    <a href="dashboard.html" class="icon-btn"><i class="fas fa-home"></i></a>
+                    <a href="settings.html" class="profile-btn"><i class="fas fa-cog"></i></a>
+                </div>
+            </div>
+        </div>
+        <div class="dashboard-content">
+            <!-- Main Stats Grid -->
+            <div class="stats-grid">
+                <div class="stat-card">
+                    <div class="stat-icon" style="background: linear-gradient(135deg, #0891b2 0%, #14b8a6 100%); color: white;">
+                        <i class="fas fa-shopping-cart"></i>
+                    </div>
+                    <div class="stat-info">
+                        <h3 id="totalOrders">0</h3>
+                        <p>Total Orders</p>
+                    </div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-icon" style="background: linear-gradient(135deg, #10b981 0%, #14b8a6 100%); color: white;">
+                        <i class="fas fa-rupee-sign"></i>
+                    </div>
+                    <div class="stat-info">
+                        <h3 id="totalRevenue">₹0</h3>
+                        <p>Total Revenue</p>
+                    </div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-icon" style="background: linear-gradient(135deg, #f59e0b 0%, #fbbf24 100%); color: white;">
+                        <i class="fas fa-users"></i>
+                    </div>
+                    <div class="stat-info">
+                        <h3 id="activeUsers">0</h3>
+                        <p>Active Users</p>
+                    </div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-icon" style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white;">
+                        <i class="fas fa-star"></i>
+                    </div>
+                    <div class="stat-info">
+                        <h3 id="avgRating">0.0</h3>
+                        <p>Avg Rating</p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Charts Row -->
+            <div style="display: grid; grid-template-columns: 2fr 1fr; gap: 25px; margin-top: 25px;">
+                <div class="section-card">
+                    <h2 class="section-title"><i class="fas fa-chart-bar"></i> Revenue Trends</h2>
+                    <div id="revenueChart" style="height: 300px; display: flex; align-items: center; justify-content: center; background: linear-gradient(135deg, #f8fafc 0%, #e2e8f0 100%); border-radius: 15px;">
+                        <p style="color: #64748b; font-size: 18px;">Loading revenue data...</p>
+                    </div>
+                </div>
+                <div class="section-card">
+                    <h2 class="section-title"><i class="fas fa-pills"></i> Top Medicines</h2>
+                    <div id="topMedicinesContainer" style="padding: 15px 0;">
+                        <div style="text-align: center; padding: 20px; color: #64748b;">
+                            <i class="fas fa-spinner fa-spin"></i> Loading...
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- More Charts -->
+            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 25px; margin-top: 25px;">
+                <div class="section-card">
+                    <h2 class="section-title"><i class="fas fa-clock"></i> Peak Hours</h2>
+                    <div id="peakHoursChart" style="height: 250px; display: flex; align-items: center; justify-content: center; background: linear-gradient(135deg, #f8fafc 0%, #e2e8f0 100%); border-radius: 15px;">
+                        <p style="color: #64748b; font-size: 18px;">Loading peak hours data...</p>
+                    </div>
+                </div>
+                <div class="section-card">
+                    <h2 class="section-title"><i class="fas fa-map-marker-alt"></i> Orders by Location</h2>
+                    <div id="locationChart" style="height: 250px; display: flex; align-items: center; justify-content: center; background: linear-gradient(135deg, #f8fafc 0%, #e2e8f0 100%); border-radius: 15px;">
+                        <p style="color: #64748b; font-size: 18px;">Loading location data...</p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Recent Activity -->
+            <div class="section-card" style="margin-top: 25px;">
+                <h2 class="section-title"><i class="fas fa-history"></i> Recent Activity</h2>
+                <table class="data-table">
+                    <thead>
+                        <tr>
+                            <th>Activity</th>
+                            <th>User</th>
+                            <th>Details</th>
+                            <th>Time</th>
+                        </tr>
+                    </thead>
+                    <tbody id="recentActivityTable">
+                        <tr>
+                            <td colspan="4" style="text-align: center; padding: 30px; color: #64748b;">
+                                <i class="fas fa-spinner fa-spin"></i> Loading recent activity...
+                            </td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Initialize analytics page
+        document.addEventListener('DOMContentLoaded', async function() {
+            await loadAnalytics();
+        });
+
+        // Load all analytics data
+        async function loadAnalytics() {
+            const token = localStorage.getItem('token');
+            
+            try {
+                // Fetch analytics data from various endpoints
+                const [ordersRes, usersRes, medicinesRes] = await Promise.all([
+                    fetch(`${API_CONFIG.BASE_URL}/orders`, { headers: { 'Authorization': `Bearer ${token}` } }),
+                    fetch(`${API_CONFIG.BASE_URL}/users`, { headers: { 'Authorization': `Bearer ${token}` } }),
+                    fetch(`${API_CONFIG.BASE_URL}/medicines`, { headers: { 'Authorization': `Bearer ${token}` } })
+                ]);
+
+                let orders = [];
+                let users = [];
+                let medicines = [];
+
+                if (ordersRes.ok) {
+                    const data = await ordersRes.json();
+                    orders = data.data?.orders || data.orders || [];
+                }
+
+                if (usersRes.ok) {
+                    const data = await usersRes.json();
+                    users = data.data?.users || data.users || [];
+                }
+
+                if (medicinesRes.ok) {
+                    const data = await medicinesRes.json();
+                    medicines = data.data?.medicines || data.medicines || data.data || [];
+                }
+
+                // Update stats
+                updateMainStats(orders, users);
+                updateTopMedicines(orders, medicines);
+                updateCharts(orders);
+                updateRecentActivity(orders);
+
+            } catch (error) {
+                console.error('Error loading analytics:', error);
+                showEmptyState();
+            }
+        }
+
+        // Update main statistics
+        function updateMainStats(orders, users) {
+            // Total orders
+            document.getElementById('totalOrders').textContent = formatNumber(orders.length);
+            
+            // Total revenue
+            const totalRevenue = orders.reduce((sum, order) => sum + (order.totalAmount || order.total || 0), 0);
+            document.getElementById('totalRevenue').textContent = formatCurrency(totalRevenue);
+            
+            // Active users (users who are active or verified)
+            const activeUsers = users.filter(u => u.isActive !== false && u.role === 'user').length;
+            document.getElementById('activeUsers').textContent = formatNumber(activeUsers);
+            
+            // Average rating
+            const ratingsOrders = orders.filter(o => o.rating);
+            const avgRating = ratingsOrders.length > 0 
+                ? (ratingsOrders.reduce((sum, o) => sum + o.rating, 0) / ratingsOrders.length).toFixed(1)
+                : '0.0';
+            document.getElementById('avgRating').textContent = avgRating;
+        }
+
+        // Update top medicines section
+        function updateTopMedicines(orders, medicines) {
+            const container = document.getElementById('topMedicinesContainer');
+            
+            // Count medicine occurrences from orders
+            const medicineCounts = {};
+            orders.forEach(order => {
+                const items = order.items || order.medicines || [];
+                items.forEach(item => {
+                    const name = item.medicineName || item.name || 'Unknown';
+                    medicineCounts[name] = (medicineCounts[name] || 0) + (item.quantity || 1);
+                });
+            });
+            
+            // Sort by count and take top 5
+            const topMedicines = Object.entries(medicineCounts)
+                .sort((a, b) => b[1] - a[1])
+                .slice(0, 5);
+            
+            if (topMedicines.length === 0) {
+                container.innerHTML = `
+                    <div style="text-align: center; padding: 40px; color: #64748b;">
+                        <i class="fas fa-pills" style="font-size: 2rem; opacity: 0.3; margin-bottom: 10px;"></i>
+                        <p>No medicine data available yet</p>
+                    </div>
+                `;
+                return;
+            }
+            
+            container.innerHTML = topMedicines.map(([name, count]) => `
+                <div style="display: flex; justify-content: space-between; padding: 12px 0; border-bottom: 1px solid #f1f5f9;">
+                    <span>${name}</span>
+                    <strong style="color: #10b981;">${formatNumber(count)}</strong>
+                </div>
+            `).join('');
+        }
+
+        // Update chart placeholders with summary data
+        function updateCharts(orders) {
+            // Revenue chart - show monthly breakdown or summary
+            const revenueChart = document.getElementById('revenueChart');
+            if (orders.length === 0) {
+                revenueChart.innerHTML = '<p style="color: #64748b; font-size: 18px;">No revenue data available</p>';
+            } else {
+                const monthlyData = getMonthlyRevenue(orders);
+                revenueChart.innerHTML = `
+                    <div style="width: 100%; padding: 20px;">
+                        <div style="display: flex; justify-content: space-around; align-items: flex-end; height: 200px;">
+                            ${monthlyData.map(m => `
+                                <div style="text-align: center;">
+                                    <div style="background: var(--gradient-primary); width: 40px; height: ${Math.max(20, (m.revenue / Math.max(...monthlyData.map(x => x.revenue))) * 150)}px; border-radius: 5px 5px 0 0;"></div>
+                                    <p style="font-size: 12px; margin-top: 5px;">${m.month}</p>
+                                    <p style="font-size: 10px; color: #64748b;">₹${formatNumber(m.revenue)}</p>
+                                </div>
+                            `).join('')}
+                        </div>
+                    </div>
+                `;
+            }
+
+            // Peak hours - show order distribution by hour
+            const peakHoursChart = document.getElementById('peakHoursChart');
+            const hourlyData = getHourlyDistribution(orders);
+            if (hourlyData.some(h => h > 0)) {
+                const maxHourly = Math.max(...hourlyData);
+                peakHoursChart.innerHTML = `
+                    <div style="width: 100%; padding: 20px; overflow-x: auto;">
+                        <div style="display: flex; align-items: flex-end; height: 150px; gap: 4px;">
+                            ${hourlyData.map((count, hour) => `
+                                <div style="flex: 1; text-align: center; min-width: 15px;">
+                                    <div style="background: ${count > 0 ? 'var(--gradient-success)' : '#e2e8f0'}; width: 100%; height: ${Math.max(5, (count / maxHourly) * 100)}px; border-radius: 3px 3px 0 0;"></div>
+                                    <p style="font-size: 8px; margin-top: 3px;">${hour}h</p>
+                                </div>
+                            `).join('')}
+                        </div>
+                    </div>
+                `;
+            } else {
+                peakHoursChart.innerHTML = '<p style="color: #64748b; font-size: 18px;">No peak hours data available</p>';
+            }
+
+            // Location chart - show order distribution by city/area
+            const locationChart = document.getElementById('locationChart');
+            const locationData = getLocationDistribution(orders);
+            if (locationData.length > 0) {
+                locationChart.innerHTML = `
+                    <div style="width: 100%; padding: 20px;">
+                        ${locationData.slice(0, 5).map(loc => `
+                            <div style="margin-bottom: 15px;">
+                                <div style="display: flex; justify-content: space-between; margin-bottom: 5px;">
+                                    <span style="font-size: 14px;">${loc.name}</span>
+                                    <span style="font-size: 14px; color: #10b981;">${loc.count} orders</span>
+                                </div>
+                                <div style="background: #e2e8f0; border-radius: 5px; height: 8px;">
+                                    <div style="background: var(--gradient-purple); width: ${(loc.count / locationData[0].count) * 100}%; height: 100%; border-radius: 5px;"></div>
+                                </div>
+                            </div>
+                        `).join('')}
+                    </div>
+                `;
+            } else {
+                locationChart.innerHTML = '<p style="color: #64748b; font-size: 18px;">No location data available</p>';
+            }
+        }
+
+        // Update recent activity table
+        function updateRecentActivity(orders) {
+            const tbody = document.getElementById('recentActivityTable');
+            
+            if (orders.length === 0) {
+                tbody.innerHTML = `
+                    <tr>
+                        <td colspan="4" style="text-align: center; padding: 40px; color: #64748b;">
+                            <i class="fas fa-history" style="font-size: 2rem; opacity: 0.3; margin-bottom: 10px; display: block;"></i>
+                            No recent activity
+                        </td>
+                    </tr>
+                `;
+                return;
+            }
+
+            // Sort by date and take recent 10
+            const recentOrders = [...orders]
+                .sort((a, b) => new Date(b.createdAt || b.date) - new Date(a.createdAt || a.date))
+                .slice(0, 10);
+
+            tbody.innerHTML = recentOrders.map(order => `
+                <tr>
+                    <td><span class="badge badge-${getActivityBadge(order.status)}">${getActivityType(order.status)}</span></td>
+                    <td>${order.userName || order.user?.name || 'Customer'}</td>
+                    <td>Order #${order.orderId || order._id?.slice(-6) || 'N/A'} - ${formatCurrency(order.totalAmount || order.total || 0)}</td>
+                    <td>${formatTimeAgo(order.createdAt || order.date)}</td>
+                </tr>
+            `).join('');
+        }
+
+        // Helper functions
+        function formatNumber(num) {
+            if (num >= 1000000) return (num / 1000000).toFixed(1) + 'M';
+            if (num >= 1000) return (num / 1000).toFixed(1) + 'K';
+            return num.toString();
+        }
+
+        function formatCurrency(amount) {
+            if (amount >= 1000000) return '₹' + (amount / 1000000).toFixed(1) + 'M';
+            if (amount >= 100000) return '₹' + (amount / 100000).toFixed(1) + 'L';
+            if (amount >= 1000) return '₹' + (amount / 1000).toFixed(1) + 'K';
+            return '₹' + amount.toFixed(0);
+        }
+
+        function getMonthlyRevenue(orders) {
+            const months = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+            const currentMonth = new Date().getMonth();
+            const monthlyRevenue = {};
+            
+            // Initialize last 6 months
+            for (let i = 5; i >= 0; i--) {
+                const monthIndex = (currentMonth - i + 12) % 12;
+                monthlyRevenue[months[monthIndex]] = 0;
+            }
+            
+            // Sum revenue by month
+            orders.forEach(order => {
+                const date = new Date(order.createdAt || order.date);
+                const month = months[date.getMonth()];
+                if (monthlyRevenue.hasOwnProperty(month)) {
+                    monthlyRevenue[month] += order.totalAmount || order.total || 0;
+                }
+            });
+            
+            return Object.entries(monthlyRevenue).map(([month, revenue]) => ({ month, revenue }));
+        }
+
+        function getHourlyDistribution(orders) {
+            const hours = new Array(24).fill(0);
+            orders.forEach(order => {
+                const date = new Date(order.createdAt || order.date);
+                hours[date.getHours()]++;
+            });
+            return hours;
+        }
+
+        function getLocationDistribution(orders) {
+            const locations = {};
+            orders.forEach(order => {
+                const city = order.deliveryAddress?.city || order.address?.city || 'Unknown';
+                locations[city] = (locations[city] || 0) + 1;
+            });
+            return Object.entries(locations)
+                .map(([name, count]) => ({ name, count }))
+                .sort((a, b) => b.count - a.count);
+        }
+
+        function getActivityType(status) {
+            const types = {
+                'pending': 'New Order',
+                'processing': 'Processing',
+                'shipped': 'Shipped',
+                'delivered': 'Delivered',
+                'cancelled': 'Cancelled'
+            };
+            return types[status] || 'Order';
+        }
+
+        function getActivityBadge(status) {
+            const badges = {
+                'pending': 'warning',
+                'processing': 'info',
+                'shipped': 'info',
+                'delivered': 'success',
+                'cancelled': 'danger'
+            };
+            return badges[status] || 'info';
+        }
+
+        function formatTimeAgo(dateStr) {
+            if (!dateStr) return 'N/A';
+            const date = new Date(dateStr);
+            const seconds = Math.floor((new Date() - date) / 1000);
+            
+            if (seconds < 60) return 'Just now';
+            if (seconds < 3600) return `${Math.floor(seconds / 60)}m ago`;
+            if (seconds < 86400) return `${Math.floor(seconds / 3600)}h ago`;
+            return `${Math.floor(seconds / 86400)}d ago`;
+        }
+
+        function showEmptyState() {
+            document.getElementById('totalOrders').textContent = '0';
+            document.getElementById('totalRevenue').textContent = '₹0';
+            document.getElementById('activeUsers').textContent = '0';
+            document.getElementById('avgRating').textContent = '0.0';
+        }
+    </script>
+</body>
+</html>

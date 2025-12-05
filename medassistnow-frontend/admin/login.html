@@ -1,0 +1,238 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Admin Login - MedAssist Now</title>
+    <link rel="stylesheet"
+        href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700;800&display=swap">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Poppins', sans-serif;
+        }
+
+        .auth-container {
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background: linear-gradient(135deg, #334155 0%, #1e293b 100%);
+            padding: 20px;
+        }
+
+        .auth-card {
+            background: white;
+            padding: 50px;
+            border-radius: 25px;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+            max-width: 450px;
+            width: 100%;
+        }
+
+        .auth-card h1 {
+            text-align: center;
+            margin-bottom: 10px;
+            background: linear-gradient(135deg, #334155 0%, #1e293b 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            font-size: 32px;
+            font-weight: 700;
+        }
+
+        .auth-card .subtitle {
+            text-align: center;
+            color: #64748b;
+            margin-bottom: 30px;
+            font-size: 14px;
+        }
+
+        .icon-container {
+            text-align: center;
+            margin-bottom: 25px;
+        }
+
+        .icon-container i {
+            font-size: 64px;
+            background: linear-gradient(135deg, #334155 0%, #1e293b 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+
+        .form-group {
+            margin-bottom: 20px;
+        }
+
+        .form-input {
+            width: 100%;
+            padding: 15px 20px 15px 50px;
+            border: 2px solid #e2e8f0;
+            border-radius: 12px;
+            font-size: 15px;
+            transition: all 0.3s;
+        }
+
+        .form-input:focus {
+            outline: none;
+            border-color: #334155;
+            box-shadow: 0 0 0 4px rgba(51, 65, 85, 0.1);
+        }
+
+        .input-wrapper {
+            position: relative;
+        }
+
+        .input-wrapper i {
+            position: absolute;
+            left: 18px;
+            top: 50%;
+            transform: translateY(-50%);
+            color: #334155;
+        }
+
+        .checkbox-group {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 25px;
+            font-size: 14px;
+        }
+
+        .btn-submit {
+            width: 100%;
+            padding: 15px;
+            background: linear-gradient(135deg, #334155 0%, #1e293b 100%);
+            color: white;
+            border: none;
+            border-radius: 12px;
+            font-size: 16px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+
+        .btn-submit:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 25px rgba(51, 65, 85, 0.4);
+        }
+
+        .portal-links {
+            margin-top: 30px;
+            text-align: center;
+            padding-top: 20px;
+            border-top: 1px solid #e2e8f0;
+        }
+
+        .portal-links a {
+            color: #334155;
+            text-decoration: none;
+            margin: 0 10px;
+            font-size: 14px;
+        }
+
+        .back-link {
+            text-align: center;
+            margin-top: 20px;
+        }
+
+        .back-link a {
+            color: white;
+            text-decoration: none;
+            font-size: 14px;
+        }
+    </style>
+</head>
+
+<body>
+    <div class="auth-container">
+        <div>
+            <div class="auth-card">
+                <div class="icon-container">
+                    <i class="fas fa-shield-alt"></i>
+                </div>
+                <h1>Admin Login</h1>
+                <p class="subtitle">Secure system administration</p>
+                <form id="adminLoginForm">
+                    <div class="form-group">
+                        <div class="input-wrapper">
+                            <i class="fas fa-envelope"></i>
+                            <input type="email" id="email" class="form-input" placeholder="Admin Email" required>
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        <div class="input-wrapper">
+                            <i class="fas fa-lock"></i>
+                            <input type="password" id="password" class="form-input" placeholder="Password" required>
+                        </div>
+                    </div>
+                    <div class="checkbox-group">
+                        <label><input type="checkbox"> Remember me</label>
+                        <a href="#" style="color: #ef4444; text-decoration: none;">Forgot Password?</a>
+                    </div>
+                    <button type="submit" class="btn-submit">
+                        Sign In
+                    </button>
+                </form>
+                
+                <div style="text-align: center; margin-top: 20px; padding-top: 20px; border-top: 1px solid #e5e7eb;">
+                    <p style="color: #64748b; font-size: 14px;">Don't have an account? <a href="signup.html" style="color: #334155; text-decoration: none; font-weight: 600;">Register as admin</a></p>
+                </div>
+                
+                <div class="portal-links">
+                    <p style="color: #64748b; margin-bottom: 10px; font-size: 14px;">Access other portals:</p>
+                    <a href="../user/login.html">Patient</a> |
+                    <a href="../pharmacy/login.html">Pharmacy</a> |
+                    <a href="../delivery/login.html">Delivery</a>
+                </div>
+            </div>
+            <div class="back-link">
+                <a href="../index.html"><i class="fas fa-arrow-left"></i> Back to Home</a>
+            </div>
+        </div>
+    </div>
+    
+    <!-- API Integration Scripts -->
+    <script src="../js/config.js"></script>
+    <script src="../js/auth.js"></script>
+    <script src="../js/api.js"></script>
+    <script src="../js/utils.js"></script>
+    <script src="../js/auth.service.js"></script>
+    <script>
+        document.getElementById('adminLoginForm').addEventListener('submit', async function(e) {
+            e.preventDefault();
+            
+            const email = document.getElementById('email').value;
+            const password = document.getElementById('password').value;
+            
+            try {
+                Utils.showLoading();
+                const response = await AuthService.login({ email, password });
+                Utils.hideLoading();
+                
+                // Check if user has admin role
+                if (response.data && response.data.user && response.data.user.role !== 'admin') {
+                    Utils.showToast('Access denied. Admin account required.', 'error');
+                    Auth.logout();
+                    return;
+                }
+                
+                Utils.showToast('Login successful!', 'success');
+                setTimeout(() => {
+                    window.location.href = 'dashboard.html';
+                }, 1000);
+            } catch (error) {
+                Utils.hideLoading();
+                Utils.showToast(error.message || 'Login failed', 'error');
+            }
+        });
+    </script>
+</body>
+
+</html>

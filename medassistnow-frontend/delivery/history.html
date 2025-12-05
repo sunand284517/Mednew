@@ -1,0 +1,250 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Delivery History - MedAssist Now</title>
+    <link rel="stylesheet" href="../styles/dashboard-modern.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <style>
+        .empty-state {
+            text-align: center;
+            padding: 60px 20px;
+            color: var(--text-secondary);
+        }
+        .empty-state i {
+            font-size: 4rem;
+            margin-bottom: 20px;
+            opacity: 0.5;
+        }
+        @media (max-width: 768px) {
+            .dashboard-header .header-content { flex-direction: column; gap: 15px; text-align: center; }
+            .header-actions { justify-content: center; }
+            .stats-grid { grid-template-columns: 1fr 1fr; }
+            .data-table { font-size: 0.85rem; }
+        }
+        @media (max-width: 480px) {
+            .dashboard-container { padding: 10px; }
+            .section-card { padding: 15px; }
+            .stats-grid { grid-template-columns: 1fr; }
+        }
+    </style>
+</head>
+<body data-required-role="delivery">
+    <script src="../js/config.js"></script>
+    <script>
+        (async function() {
+            const token = localStorage.getItem('token');
+            if (!token) { window.location.replace('login.html'); return; }
+            try {
+                const response = await fetch(`${API_CONFIG.BASE_URL}/auth/me`, { headers: { 'Authorization': `Bearer ${token}` } });
+                if (!response.ok) { localStorage.clear(); window.location.replace('login.html'); return; }
+                const data = await response.json();
+                if (data.data.user.role !== 'delivery') { alert('Access denied.'); localStorage.clear(); window.location.replace('login.html'); return; }
+                localStorage.setItem('userCache', JSON.stringify(data.data.user));
+            } catch (e) { console.error('Auth error:', e); localStorage.clear(); window.location.replace('login.html'); }
+        })();
+    </script>
+    
+    <div class="emergency-banner">
+        <div class="container">
+            <div class="banner-content">
+                <i class="fas fa-ambulance"></i>
+                <span>Need medicines urgently? We're available 24/7 for emergency deliveries!</span>
+                <a href="../user/search.html" class="emergency-btn">Emergency Request</a>
+            </div>
+        </div>
+    </div>
+    
+    <div class="dashboard-container">
+        <div class="dashboard-header">
+            <div class="header-content">
+                <div class="user-welcome">
+                    <h1><i class="fas fa-history"></i> Delivery History</h1>
+                    <p>Your completed deliveries</p>
+                </div>
+                <div class="header-actions">
+                    <a href="dashboard.html" class="icon-btn"><i class="fas fa-home"></i></a>
+                    <a href="requests.html" class="icon-btn"><i class="fas fa-clipboard-list"></i></a>
+                    <a href="profile.html" class="profile-btn" id="headerInitials">DP</a>
+                </div>
+            </div>
+        </div>
+        
+        <div class="dashboard-content">
+            <div class="stats-grid" style="margin-bottom: 30px;">
+                <div class="stat-card">
+                    <div class="stat-icon" style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white;">
+                        <i class="fas fa-boxes"></i>
+                    </div>
+                    <div class="stat-info">
+                        <h3 id="totalDeliveries">0</h3>
+                        <p>Total Deliveries</p>
+                    </div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-icon" style="background: linear-gradient(135deg, #10b981 0%, #14b8a6 100%); color: white;">
+                        <i class="fas fa-rupee-sign"></i>
+                    </div>
+                    <div class="stat-info">
+                        <h3 id="totalEarnings">₹0</h3>
+                        <p>Total Earnings</p>
+                    </div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-icon" style="background: linear-gradient(135deg, #f59e0b 0%, #fbbf24 100%); color: white;">
+                        <i class="fas fa-calendar-day"></i>
+                    </div>
+                    <div class="stat-info">
+                        <h3 id="todayDeliveries">0</h3>
+                        <p>Today's Deliveries</p>
+                    </div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-icon" style="background: linear-gradient(135deg, #0891b2 0%, #14b8a6 100%); color: white;">
+                        <i class="fas fa-wallet"></i>
+                    </div>
+                    <div class="stat-info">
+                        <h3 id="todayEarnings">₹0</h3>
+                        <p>Today's Earnings</p>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="section-card">
+                <h2 class="section-title"><i class="fas fa-list"></i> Completed Deliveries</h2>
+                <div class="table-container">
+                    <table class="data-table">
+                        <thead>
+                            <tr>
+                                <th>Order ID</th>
+                                <th>Customer</th>
+                                <th>Pickup</th>
+                                <th>Drop</th>
+                                <th>Distance</th>
+                                <th>Fee</th>
+                                <th>Date</th>
+                                <th>Rating</th>
+                            </tr>
+                        </thead>
+                        <tbody id="historyTableBody">
+                            <tr>
+                                <td colspan="8" style="text-align: center; padding: 40px;">
+                                    <i class="fas fa-spinner fa-spin" style="font-size: 2rem; color: var(--primary-color);"></i>
+                                    <p style="margin-top: 10px; color: var(--text-secondary);">Loading delivery history...</p>
+                                </td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <script src="../js/config.js"></script>
+    <script src="../js/auth.js"></script>
+    <script src="../js/api.js"></script>
+    <script src="../js/utils.js"></script>
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            const user = Auth.getUser();
+            if (user) {
+                const initials = (user.name || 'DP').split(' ').map(n => n[0]).join('').toUpperCase().substring(0, 2);
+                document.getElementById('headerInitials').textContent = initials;
+                loadDeliveryHistory();
+            }
+        });
+        
+        async function loadDeliveryHistory() {
+            try {
+                const token = localStorage.getItem('token');
+                const response = await fetch(`${API_CONFIG.BASE_URL}/deliveries/my-history`, {
+                    headers: { 'Authorization': `Bearer ${token}` }
+                });
+                
+                if (response.ok) {
+                    const data = await response.json();
+                    const deliveries = data.data || data.deliveries || [];
+                    displayStats(deliveries);
+                    displayHistory(deliveries);
+                } else {
+                    showNoHistory();
+                }
+            } catch (error) {
+                console.error('Error loading history:', error);
+                showNoHistory();
+            }
+        }
+        
+        function displayStats(deliveries) {
+            const today = new Date().toDateString();
+            const todayDeliveries = deliveries.filter(d => new Date(d.completedAt || d.createdAt).toDateString() === today);
+            
+            const totalEarnings = deliveries.reduce((sum, d) => sum + (d.deliveryFee || d.fee || 0), 0);
+            const todayEarnings = todayDeliveries.reduce((sum, d) => sum + (d.deliveryFee || d.fee || 0), 0);
+            
+            document.getElementById('totalDeliveries').textContent = deliveries.length;
+            document.getElementById('totalEarnings').textContent = `₹${totalEarnings.toLocaleString()}`;
+            document.getElementById('todayDeliveries').textContent = todayDeliveries.length;
+            document.getElementById('todayEarnings').textContent = `₹${todayEarnings.toLocaleString()}`;
+        }
+        
+        function displayHistory(deliveries) {
+            const tbody = document.getElementById('historyTableBody');
+            
+            if (deliveries.length === 0) {
+                showNoHistory();
+                return;
+            }
+            
+            tbody.innerHTML = deliveries.map(delivery => {
+                const date = new Date(delivery.completedAt || delivery.createdAt);
+                const isToday = date.toDateString() === new Date().toDateString();
+                const dateStr = isToday ? `Today, ${date.toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit' })}` : date.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
+                
+                return `
+                    <tr>
+                        <td><strong>#${delivery.orderNumber || delivery.orderId?.slice(-8).toUpperCase() || 'N/A'}</strong></td>
+                        <td>${delivery.customer?.name || delivery.customerName || 'Customer'}</td>
+                        <td>${delivery.pharmacy?.name || delivery.pickupLocation || 'Pharmacy'}</td>
+                        <td>${delivery.dropLocation || delivery.deliveryAddress || 'Delivery Address'}</td>
+                        <td>${delivery.distance || '0'} km</td>
+                        <td><strong>₹${delivery.deliveryFee || delivery.fee || 0}</strong></td>
+                        <td>${dateStr}</td>
+                        <td>${generateRatingStars(delivery.rating || 5)}</td>
+                    </tr>
+                `;
+            }).join('');
+        }
+        
+        function generateRatingStars(rating) {
+            let stars = '';
+            for (let i = 1; i <= 5; i++) {
+                if (i <= rating) {
+                    stars += '<i class="fas fa-star" style="color: #f59e0b;"></i>';
+                } else {
+                    stars += '<i class="far fa-star" style="color: #f59e0b;"></i>';
+                }
+            }
+            return `<div>${stars}</div>`;
+        }
+        
+        function showNoHistory() {
+            document.getElementById('historyTableBody').innerHTML = `
+                <tr>
+                    <td colspan="8">
+                        <div class="empty-state">
+                            <i class="fas fa-truck"></i>
+                            <h3>No Delivery History</h3>
+                            <p>Complete deliveries to see them here</p>
+                            <a href="requests.html" class="btn-primary" style="display: inline-block; margin-top: 15px;">
+                                <i class="fas fa-clipboard-list"></i> View Requests
+                            </a>
+                        </div>
+                    </td>
+                </tr>
+            `;
+        }
+    </script>
+</body>
+</html>

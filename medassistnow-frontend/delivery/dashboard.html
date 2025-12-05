@@ -1,0 +1,501 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Delivery Dashboard - MedAssist Now</title>
+    <link rel="stylesheet" href="../styles/dashboard-modern.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <style>
+        .notification-dropdown {
+            display: none;
+            position: absolute;
+            top: 100%;
+            right: 0;
+            width: 350px;
+            max-height: 450px;
+            overflow-y: auto;
+            background: white;
+            border-radius: 12px;
+            box-shadow: 0 10px 40px rgba(0,0,0,0.15);
+            z-index: 1000;
+            margin-top: 10px;
+        }
+        .notification-dropdown.show { display: block; }
+        .notif-header {
+            padding: 15px;
+            border-bottom: 1px solid #f1f5f9;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        .notif-header h4 { font-weight: 600; color: #1e293b; margin: 0; }
+        .notif-item {
+            padding: 12px 15px;
+            border-bottom: 1px solid #f8fafc;
+            cursor: pointer;
+            transition: background 0.2s;
+        }
+        .notif-item:hover { background: #f8fafc; }
+        .notif-item.unread { background: #f0f9ff; border-left: 3px solid #667eea; }
+        .notif-item .notif-title { font-weight: 500; font-size: 14px; margin-bottom: 4px; color: #1e293b; }
+        .notif-item .notif-message { font-size: 13px; color: #64748b; line-height: 1.4; }
+        .notif-item .notif-time { font-size: 11px; color: #94a3b8; margin-top: 5px; }
+        .notif-badge {
+            position: absolute; top: -5px; right: -5px;
+            background: #ef4444; color: white;
+            font-size: 10px; font-weight: bold;
+            padding: 2px 6px; border-radius: 10px;
+            min-width: 16px; text-align: center;
+        }
+        .request-card { border-left: 4px solid #667eea; margin-bottom: 15px; }
+        .request-card.urgent { border-left-color: #f59e0b; }
+        .live-indicator {
+            display: inline-flex; align-items: center; gap: 6px;
+            background: rgba(16, 185, 129, 0.1); color: #10b981;
+            padding: 4px 12px; border-radius: 20px; font-size: 12px; font-weight: 500;
+        }
+        .live-indicator .dot {
+            width: 8px; height: 8px; background: #10b981;
+            border-radius: 50%; animation: pulse 2s infinite;
+        }
+        @keyframes pulse { 0%, 100% { opacity: 1; } 50% { opacity: 0.5; } }
+    </style>
+</head>
+
+<body data-required-role="delivery">
+    <script src="../js/config.js"></script>
+    <script>
+        (async function() {
+            const token = localStorage.getItem('token');
+            if (!token) { window.location.replace('login.html'); return; }
+            try {
+                const response = await fetch(`${API_CONFIG.BASE_URL}/auth/me`, {
+                    headers: { 'Authorization': `Bearer ${token}` }
+                });
+                if (!response.ok) { localStorage.clear(); window.location.replace('login.html'); return; }
+                const data = await response.json();
+                const user = data.data.user;
+                if (user.role !== 'delivery') {
+                    alert('Access denied. Delivery partner role required.');
+                    localStorage.clear(); window.location.replace('login.html'); return;
+                }
+                localStorage.setItem('userCache', JSON.stringify(user));
+                document.getElementById('deliveryPartnerName').textContent = user.name || user.firstName + ' ' + user.lastName || 'Partner';
+            } catch (e) { console.error('Auth error:', e); localStorage.clear(); window.location.replace('login.html'); }
+        })();
+    </script>
+    <div class="emergency-banner">
+        <div class="container">
+            <div class="banner-content">
+                <i class="fas fa-ambulance"></i>
+                <span>Need medicines urgently? We're available 24/7 for emergency deliveries!</span>
+                <a href="../user/search.html" class="emergency-btn">Emergency Request</a>
+            </div>
+        </div>
+    </div>
+    <div class="dashboard-container">
+        <div class="dashboard-header">
+            <div class="header-content">
+                <div class="user-welcome">
+                    <h1><i class="fas fa-motorcycle"></i> Welcome, <span id="deliveryPartnerName">Partner</span></h1>
+                    <p>Manage your deliveries and track your earnings</p>
+                </div>
+                <div class="header-actions">
+                    <!-- Notification Icon -->
+                    <div class="notification-wrapper" style="position: relative;">
+                        <button class="icon-btn" title="Notifications" id="notificationBtn" onclick="toggleNotifications()">
+                            <i class="fas fa-bell"></i>
+                            <span class="notif-badge" id="notifBadge" style="display: none;">0</span>
+                        </button>
+                        <div class="notification-dropdown" id="notificationDropdown">
+                            <div class="notif-header">
+                                <h4><i class="fas fa-bell"></i> Notifications</h4>
+                                <button onclick="markAllAsRead()" style="background: none; border: none; color: #667eea; cursor: pointer; font-size: 12px;">Mark all read</button>
+                            </div>
+                            <div id="notificationList">
+                                <div style="text-align: center; padding: 30px; color: #94a3b8;">
+                                    <i class="fas fa-bell-slash" style="font-size: 2rem; margin-bottom: 10px; display: block;"></i>
+                                    No notifications yet
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <a href="requests.html" class="icon-btn" title="Available Requests"><i class="fas fa-clipboard-list"></i></a>
+                    <a href="history.html" class="icon-btn" title="Delivery History"><i class="fas fa-history"></i></a>
+                    <a href="profile.html" class="profile-btn" title="Profile" id="deliveryInitials">D</a>
+                    <a href="../index.html" class="icon-btn" title="Home" style="background: var(--gradient-purple);"><i class="fas fa-home"></i></a>
+                    <button id="logoutBtn" class="icon-btn" title="Logout" style="background: linear-gradient(135deg, #ef4444 0%, #dc2626 100%);">
+                        <i class="fas fa-sign-out-alt"></i>
+                    </button>
+                </div>
+            </div>
+        </div>
+        <div class="dashboard-content">
+            <!-- Live Status Indicator -->
+            <div style="display: flex; justify-content: flex-end; margin-bottom: 15px;">
+                <div class="live-indicator" id="liveIndicator">
+                    <div class="dot"></div>
+                    <span>Live Updates Active</span>
+                </div>
+            </div>
+            
+            <div class="quick-actions">
+                <a href="requests.html" class="action-card" style="background: var(--gradient-primary);">
+                    <i class="fas fa-clipboard-list"></i>
+                    <h3>Available Requests</h3>
+                    <p>View delivery requests</p>
+                </a>
+                <a href="history.html" class="action-card" style="background: var(--gradient-purple);">
+                    <i class="fas fa-history"></i>
+                    <h3>Delivery History</h3>
+                    <p>View past deliveries</p>
+                </a>
+                <a href="earnings.html" class="action-card" style="background: var(--gradient-accent);">
+                    <i class="fas fa-wallet"></i>
+                    <h3>Earnings</h3>
+                    <p>View your earnings</p>
+                </a>
+            </div>
+            
+            <div class="stats-grid">
+                <div class="stat-card">
+                    <div class="stat-icon" style="background: var(--gradient-primary); color: white;">
+                        <i class="fas fa-motorcycle"></i>
+                    </div>
+                    <div class="stat-info">
+                        <h3 id="todayDeliveries">0</h3>
+                        <p>Today's Deliveries</p>
+                    </div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-icon" style="background: var(--gradient-success); color: white;">
+                        <i class="fas fa-rupee-sign"></i>
+                    </div>
+                    <div class="stat-info">
+                        <h3 id="todayEarnings">₹0</h3>
+                        <p>Today's Earnings</p>
+                    </div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-icon" style="background: var(--gradient-accent); color: white;">
+                        <i class="fas fa-star"></i>
+                    </div>
+                    <div class="stat-info">
+                        <h3 id="partnerRating">4.5</h3>
+                        <p>Rating</p>
+                    </div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-icon" style="background: var(--gradient-purple); color: white;">
+                        <i class="fas fa-clipboard-list"></i>
+                    </div>
+                    <div class="stat-info">
+                        <h3 id="pendingRequests">0</h3>
+                        <p>Pending Requests</p>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Available Delivery Requests -->
+            <div class="section-card">
+                <div class="section-header">
+                    <h2 class="section-title"><i class="fas fa-clipboard-list"></i> Available Delivery Requests</h2>
+                    <a href="requests.html" class="btn-primary" style="padding: 8px 16px; font-size: 0.9rem;">
+                        View All <i class="fas fa-arrow-right"></i>
+                    </a>
+                </div>
+                <div id="availableRequestsContainer">
+                    <div style="text-align: center; padding: 40px; color: var(--text-secondary);">
+                        <i class="fas fa-spinner fa-spin" style="font-size: 2rem; color: var(--primary-color); margin-bottom: 15px;"></i>
+                        <p>Loading available requests...</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Socket.IO for real-time updates -->
+    <script src="https://cdn.socket.io/4.7.2/socket.io.min.js"></script>
+    <script src="../js/notification.service.js"></script>
+    <script>
+        let socket;
+        let notifications = [];
+        
+        document.addEventListener('DOMContentLoaded', function() {
+            initializeUserData();
+            loadDashboardData();
+            loadNotifications();
+            initializeSocket();
+        });
+
+        function initializeUserData() {
+            const userCache = localStorage.getItem('userCache');
+            if (userCache) {
+                const user = JSON.parse(userCache);
+                const name = user.name || user.firstName || 'Delivery';
+                const initials = name.split(' ').map(n => n[0]).join('').toUpperCase().slice(0, 2);
+                document.getElementById('deliveryInitials').textContent = initials || 'D';
+            }
+        }
+        
+        function initializeSocket() {
+            const user = JSON.parse(localStorage.getItem('userCache') || '{}');
+            const userId = user._id || user.id;
+            
+            socket = io(API_CONFIG.BASE_URL.replace('/api', ''), {
+                auth: { token: localStorage.getItem('token') }
+            });
+            
+            socket.on('connect', () => {
+                console.log('🔌 Socket connected for delivery dashboard');
+                socket.emit('join', { room: `delivery_${userId}` });
+                socket.emit('join', { room: 'delivery_all' });
+                document.getElementById('liveIndicator').style.opacity = '1';
+            });
+            
+            socket.on('disconnect', () => {
+                console.log('🔌 Socket disconnected');
+                document.getElementById('liveIndicator').style.opacity = '0.5';
+            });
+            
+            // Listen for new delivery requests (when order is packed)
+            socket.on('newDeliveryRequest', (data) => {
+                console.log('📦 New delivery request:', data);
+                showNotificationToast('New Delivery Request!', `Order #${data.orderNumber || 'N/A'} is ready for pickup`);
+                loadAvailableRequests();
+                loadNotifications();
+            });
+            
+            socket.on('orderPacked', (data) => {
+                console.log('📦 Order packed:', data);
+                showNotificationToast('Order Ready for Pickup!', `Order #${data.orderNumber} from ${data.pharmacyName || 'Pharmacy'}`);
+                loadAvailableRequests();
+                loadNotifications();
+            });
+            
+            socket.on('notification', (data) => {
+                console.log('🔔 New notification:', data);
+                notifications.unshift(data);
+                renderNotifications();
+                updateNotificationBadge();
+            });
+        }
+        
+        async function loadDashboardData() {
+            await Promise.all([loadStats(), loadAvailableRequests()]);
+        }
+        
+        async function loadStats() {
+            const token = localStorage.getItem('token');
+            try {
+                const response = await fetch(`${API_CONFIG.BASE_URL}/delivery/stats`, {
+                    headers: { 'Authorization': `Bearer ${token}` }
+                });
+                if (response.ok) {
+                    const data = await response.json();
+                    const stats = data.data || data;
+                    document.getElementById('todayDeliveries').textContent = stats.todayDeliveries || 0;
+                    document.getElementById('todayEarnings').textContent = `₹${stats.todayEarnings || 0}`;
+                    document.getElementById('partnerRating').textContent = stats.rating || '4.5';
+                    document.getElementById('pendingRequests').textContent = stats.pendingRequests || 0;
+                }
+            } catch (error) { console.error('Error loading stats:', error); }
+        }
+        
+        async function loadAvailableRequests() {
+            const token = localStorage.getItem('token');
+            const container = document.getElementById('availableRequestsContainer');
+            
+            try {
+                const response = await fetch(`${API_CONFIG.BASE_URL}/delivery/requests`, {
+                    headers: { 'Authorization': `Bearer ${token}` }
+                });
+                
+                if (response.ok) {
+                    const data = await response.json();
+                    const requests = data.data?.requests || data.requests || [];
+                    
+                    if (requests.length === 0) {
+                        container.innerHTML = `
+                            <div style="text-align: center; padding: 40px; color: var(--text-secondary);">
+                                <i class="fas fa-clipboard-list" style="font-size: 3rem; opacity: 0.3; display: block; margin-bottom: 15px;"></i>
+                                <p>No delivery requests available</p>
+                                <p style="font-size: 13px; color: #94a3b8; margin-top: 10px;">New requests will appear here when orders are packed</p>
+                            </div>
+                        `;
+                    } else {
+                        renderRequests(requests.slice(0, 3));
+                    }
+                    document.getElementById('pendingRequests').textContent = requests.length;
+                } else {
+                    container.innerHTML = `
+                        <div style="text-align: center; padding: 40px; color: var(--text-secondary);">
+                            <i class="fas fa-clipboard-list" style="font-size: 3rem; opacity: 0.3; display: block; margin-bottom: 15px;"></i>
+                            <p>No delivery requests available</p>
+                        </div>
+                    `;
+                }
+            } catch (error) {
+                console.error('Error loading requests:', error);
+                container.innerHTML = `
+                    <div style="text-align: center; padding: 40px; color: var(--text-secondary);">
+                        <i class="fas fa-clipboard-list" style="font-size: 3rem; opacity: 0.3; display: block; margin-bottom: 15px;"></i>
+                        <p>No delivery requests available</p>
+                    </div>
+                `;
+            }
+        }
+        
+        function renderRequests(requests) {
+            const container = document.getElementById('availableRequestsContainer');
+            container.innerHTML = requests.map(request => {
+                const orderId = request.orderNumber || request.orderId?.slice(-6).toUpperCase() || request._id?.slice(-6).toUpperCase() || 'N/A';
+                const pickupName = request.pickup?.name || request.pharmacyName || 'Pharmacy';
+                const pickupAddress = request.pickup?.address || request.pharmacyAddress || 'N/A';
+                const dropName = request.drop?.name || request.customerName || 'Customer';
+                const dropAddress = request.drop?.address || request.deliveryAddress || 'N/A';
+                const distance = request.distance || '2.5';
+                const fee = request.fee || request.deliveryFee || 50;
+                const createdAt = request.createdAt ? getTimeAgo(new Date(request.createdAt)) : 'Just now';
+                
+                return `
+                    <div class="section-card request-card ${request.urgent ? 'urgent' : ''}" style="margin-bottom: 15px; padding: 20px;">
+                        <div style="display: flex; justify-content: space-between; align-items: start; flex-wrap: wrap; gap: 15px;">
+                            <div>
+                                <h3 style="font-size: 18px; margin-bottom: 10px;">#${orderId}</h3>
+                                <div style="display: flex; gap: 30px; flex-wrap: wrap;">
+                                    <div>
+                                        <p style="color: #64748b; font-size: 13px; margin-bottom: 3px;"><i class="fas fa-store"></i> Pickup</p>
+                                        <p style="font-weight: 500;">${pickupName}</p>
+                                        <p style="color: #64748b; font-size: 13px;">${pickupAddress}</p>
+                                    </div>
+                                    <div>
+                                        <p style="color: #64748b; font-size: 13px; margin-bottom: 3px;"><i class="fas fa-map-marker-alt"></i> Drop</p>
+                                        <p style="font-weight: 500;">${dropName}</p>
+                                        <p style="color: #64748b; font-size: 13px;">${dropAddress}</p>
+                                    </div>
+                                </div>
+                                <div style="display: flex; gap: 10px; margin-top: 12px; flex-wrap: wrap;">
+                                    <span class="badge badge-info"><i class="fas fa-route"></i> ${distance} km</span>
+                                    <span class="badge badge-success"><i class="fas fa-rupee-sign"></i> ₹${fee}</span>
+                                    ${request.urgent ? '<span class="badge badge-danger"><i class="fas fa-exclamation-circle"></i> Urgent</span>' : ''}
+                                </div>
+                            </div>
+                            <div style="text-align: right;">
+                                <button class="btn-primary" style="padding: 10px 20px;" onclick="acceptRequest('${request._id}')">
+                                    <i class="fas fa-check"></i> Accept
+                                </button>
+                                <p style="color: #94a3b8; font-size: 12px; margin-top: 8px;">Posted ${createdAt}</p>
+                            </div>
+                        </div>
+                    </div>
+                `;
+            }).join('');
+        }
+        
+        function getTimeAgo(date) {
+            const seconds = Math.floor((new Date() - date) / 1000);
+            if (seconds < 60) return 'Just now';
+            if (seconds < 3600) return `${Math.floor(seconds / 60)} mins ago`;
+            if (seconds < 86400) return `${Math.floor(seconds / 3600)} hours ago`;
+            return `${Math.floor(seconds / 86400)} days ago`;
+        }
+        
+        async function acceptRequest(requestId) {
+            if (!confirm('Are you sure you want to accept this delivery request?')) return;
+            const token = localStorage.getItem('token');
+            try {
+                const response = await fetch(`${API_CONFIG.BASE_URL}/delivery/requests/${requestId}/accept`, {
+                    method: 'POST',
+                    headers: { 'Authorization': `Bearer ${token}`, 'Content-Type': 'application/json' }
+                });
+                if (response.ok) {
+                    showNotificationToast('Request Accepted!', 'Navigate to pickup location');
+                    loadAvailableRequests();
+                    loadStats();
+                } else {
+                    const error = await response.json();
+                    alert(error.message || 'Failed to accept request.');
+                }
+            } catch (error) { console.error('Error:', error); alert('Error accepting request.'); }
+        }
+        
+        async function loadNotifications() {
+            try {
+                const result = await NotificationService.getNotifications();
+                if (result.success) {
+                    notifications = result.data || [];
+                    renderNotifications();
+                    updateNotificationBadge();
+                }
+            } catch (error) { console.error('Error loading notifications:', error); }
+        }
+        
+        function renderNotifications() {
+            const container = document.getElementById('notificationList');
+            if (notifications.length === 0) {
+                container.innerHTML = `<div style="text-align: center; padding: 30px; color: #94a3b8;">
+                    <i class="fas fa-bell-slash" style="font-size: 2rem; margin-bottom: 10px; display: block;"></i>No notifications yet</div>`;
+                return;
+            }
+            container.innerHTML = notifications.slice(0, 10).map(notif => `
+                <div class="notif-item ${notif.read ? '' : 'unread'}" onclick="handleNotificationClick('${notif._id}', '${notif.data?.orderId || ''}')">
+                    <div class="notif-title">${notif.title}</div>
+                    <div class="notif-message">${notif.message}</div>
+                    <div class="notif-time">${getTimeAgo(new Date(notif.createdAt))}</div>
+                </div>
+            `).join('');
+        }
+        
+        function updateNotificationBadge() {
+            const unreadCount = notifications.filter(n => !n.read).length;
+            const badge = document.getElementById('notifBadge');
+            if (unreadCount > 0) { badge.textContent = unreadCount > 99 ? '99+' : unreadCount; badge.style.display = 'block'; }
+            else { badge.style.display = 'none'; }
+        }
+        
+        function toggleNotifications() { document.getElementById('notificationDropdown').classList.toggle('show'); }
+        
+        document.addEventListener('click', function(e) {
+            const wrapper = document.querySelector('.notification-wrapper');
+            if (wrapper && !wrapper.contains(e.target)) { document.getElementById('notificationDropdown').classList.remove('show'); }
+        });
+        
+        async function handleNotificationClick(notifId, orderId) {
+            await NotificationService.markAsRead(notifId);
+            const notif = notifications.find(n => n._id === notifId);
+            if (notif) notif.read = true;
+            renderNotifications();
+            updateNotificationBadge();
+            if (orderId) window.location.href = 'requests.html';
+        }
+        
+        async function markAllAsRead() {
+            await NotificationService.markAllAsRead();
+            notifications.forEach(n => n.read = true);
+            renderNotifications();
+            updateNotificationBadge();
+        }
+        
+        function showNotificationToast(title, message) {
+            const toast = document.createElement('div');
+            toast.style.cssText = 'position: fixed; top: 20px; right: 20px; background: white; padding: 15px 20px; border-radius: 12px; box-shadow: 0 10px 40px rgba(0,0,0,0.15); z-index: 2000; max-width: 350px; border-left: 4px solid #10b981; animation: slideIn 0.3s ease;';
+            toast.innerHTML = `<div style="font-weight: 600; margin-bottom: 5px;">${title}</div><div style="color: #64748b; font-size: 14px;">${message}</div>`;
+            document.body.appendChild(toast);
+            try { const audio = new Audio('data:audio/wav;base64,UklGRnoGAABXQVZFZm10IBAAAAABAAEAQB8AAEAfAAABAAgAZGF0YQoGAACBhYqFbF1fdH+Onp+dnZuXl5aVkpGQkZOXnqSqsbW3trOvrqyqqKimpaOhn5ybmZiYmZudoaWprrK1t7i3tLGurKmopaKfnJmWk5GPj5CSl5yir7a7v8LDwL24sa2ppaGdmZWSkI+PkJOYnaOpsra6vb69u7exrKikn5uXk5CPj5GVmpyjqK2yt7u9vby4s66ppJ+blpKPjo6QlJmdoqesr7O3uru6t7OvqqWgnJeTj42NjpKXnKGlqq6yt7q7urexrailnpqWkY2LjI+Tl5ugoqaprbG0tra0sK2opJ+alZGOjI2Pk5ebnaGkp6qtr7GxsK6rp6Ohn5yZlpOQj5CSlZibnZ+ho6WnqKmopaKfnJmWk5GPj5GTl5udoKKkpaanp6WjoJ2amJWTkZCQkpSXmpyeoKGjpKSjoqCenJqYlpSSkZGSlJaYmp2en6ChoaGgnpyamJaVk5KSkpOVl5iamJeVk5KRkZGSkpOUlZaXl5eXlpaVlJOSkZGRkpOUlZaWl5eXl5aVlJOSkZGRkpOUlZaXl5eXl5aVlJOSkZGRkpOUlZaXmJiYl5aVlJOSkZGRkpOUlZaXl5iYl5aVlJOSkZGRkpOUlZaXl5eXl5aVlJOSkZGRkpOUlZaXl5eXl5aVlJOSkQ=='); audio.volume = 0.3; audio.play(); } catch (e) {}
+            setTimeout(() => toast.remove(), 5000);
+        }
+
+        document.getElementById('logoutBtn').addEventListener('click', function() {
+            if (confirm('Are you sure you want to logout?')) {
+                if (socket) socket.disconnect();
+                localStorage.clear();
+                window.location.href = 'login.html';
+            }
+        });
+    </script>
+</body>
+
+</html>

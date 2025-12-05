@@ -1,0 +1,302 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Pharmacy Login - MedAssist Now</title>
+    <link rel="stylesheet" href="../styles.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <style>
+        .auth-container {
+            min-height: 100vh;
+            background: linear-gradient(135deg, #f59e0b 0%, #fbbf24 100%);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 40px 20px;
+        }
+
+        .auth-card {
+            background: white;
+            border-radius: 25px;
+            padding: 50px;
+            max-width: 500px;
+            width: 100%;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+            animation: fadeIn 0.5s;
+        }
+
+        @keyframes fadeIn {
+            from {
+                opacity: 0;
+                transform: translateY(20px);
+            }
+
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .auth-header {
+            text-align: center;
+            margin-bottom: 40px;
+        }
+
+        .auth-logo {
+            font-size: 3rem;
+            margin-bottom: 15px;
+        }
+
+        .auth-logo i {
+            background: var(--gradient-accent);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+
+        .auth-title {
+            font-size: 2rem;
+            font-weight: 700;
+            color: var(--text-primary);
+            margin-bottom: 10px;
+        }
+
+        .auth-subtitle {
+            color: var(--text-secondary);
+            font-size: 0.95rem;
+        }
+
+        .form-group {
+            margin-bottom: 25px;
+        }
+
+        .form-label {
+            display: block;
+            margin-bottom: 8px;
+            color: var(--text-primary);
+            font-weight: 500;
+            font-size: 0.95rem;
+        }
+
+        .form-input-group {
+            position: relative;
+        }
+
+        .form-input-group i {
+            position: absolute;
+            left: 15px;
+            top: 50%;
+            transform: translateY(-50%);
+            color: var(--text-secondary);
+        }
+
+        .form-input {
+            width: 100%;
+            padding: 15px 15px 15px 45px;
+            border: 2px solid #e5e7eb;
+            border-radius: 12px;
+            font-family: 'Poppins', sans-serif;
+            font-size: 1rem;
+            transition: all 0.3s;
+        }
+
+        .form-input:focus {
+            outline: none;
+            border-color: var(--accent-color);
+            box-shadow: 0 0 0 4px rgba(245, 158, 11, 0.1);
+        }
+
+        .form-options {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 25px;
+            font-size: 0.9rem;
+        }
+
+        .checkbox-label {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            cursor: pointer;
+            color: var(--text-secondary);
+        }
+
+        .forgot-link {
+            color: var(--accent-color);
+            text-decoration: none;
+            font-weight: 500;
+        }
+
+        .btn-login {
+            width: 100%;
+            padding: 15px;
+            background: var(--gradient-accent);
+            color: white;
+            border: none;
+            border-radius: 12px;
+            font-size: 1.1rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: transform 0.3s, box-shadow 0.3s;
+            box-shadow: 0 4px 15px rgba(245, 158, 11, 0.3);
+        }
+
+        .btn-login:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(245, 158, 11, 0.4);
+        }
+
+        .auth-links {
+            text-align: center;
+            margin-top: 25px;
+        }
+
+        .auth-links a {
+            color: var(--accent-color);
+            text-decoration: none;
+            font-weight: 600;
+        }
+
+        .portal-links {
+            display: flex;
+            gap: 10px;
+            justify-content: center;
+            flex-wrap: wrap;
+            margin-top: 20px;
+        }
+
+        .portal-link {
+            padding: 8px 16px;
+            border-radius: 8px;
+            text-decoration: none;
+            font-size: 0.85rem;
+            font-weight: 500;
+            transition: all 0.3s;
+            border: 2px solid #e5e7eb;
+            color: var(--text-secondary);
+        }
+
+        .portal-link:hover {
+            border-color: var(--accent-color);
+            color: var(--accent-color);
+            transform: translateY(-2px);
+        }
+
+        .home-link {
+            text-align: center;
+            margin-top: 20px;
+        }
+
+        .home-link a {
+            color: var(--accent-color);
+            text-decoration: none;
+            font-weight: 600;
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+        }
+    </style>
+</head>
+
+<body>
+    <div class="auth-container">
+        <div class="auth-card">
+            <div class="auth-header">
+                <div class="auth-logo">
+                    <i class="fas fa-store"></i>
+                </div>
+                <h1 class="auth-title">Pharmacy Login</h1>
+                <p class="auth-subtitle">Access your pharmacy dashboard</p>
+            </div>
+
+            <form id="pharmacyLoginForm">
+                <div class="form-group">
+                    <label class="form-label">Email Address</label>
+                    <div class="form-input-group">
+                        <i class="fas fa-envelope"></i>
+                        <input type="email" id="email" class="form-input" placeholder="pharmacy@example.com" required>
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <label class="form-label">Password</label>
+                    <div class="form-input-group">
+                        <i class="fas fa-lock"></i>
+                        <input type="password" id="password" class="form-input" placeholder="Enter your password" required>
+                    </div>
+                </div>
+
+                <div class="form-options">
+                    <label class="checkbox-label">
+                        <input type="checkbox">
+                        <span>Remember me</span>
+                    </label>
+                    <a href="#" class="forgot-link">Forgot Password?</a>
+                </div>
+
+                <button type="submit" class="btn-login">
+                    <i class="fas fa-sign-in-alt"></i> Sign In
+                </button>
+            </form>
+
+            <div class="auth-links">
+                <p style="color: var(--text-secondary);">
+                    Don't have an account? <a href="signup.html">Register your pharmacy</a>
+                </p>
+            </div>
+
+            <div class="auth-links">
+                <p style="color: var(--text-secondary); font-size: 0.9rem; margin-top: 20px;">Switch portal:</p>
+                <div class="portal-links">
+                    <a href="../user/login.html" class="portal-link"><i class="fas fa-heartbeat"></i> Patient</a>
+                    <a href="../delivery/login.html" class="portal-link"><i class="fas fa-motorcycle"></i> Delivery</a>
+                    <a href="../admin/login.html" class="portal-link"><i class="fas fa-shield-alt"></i> Admin</a>
+                </div>
+            </div>
+
+            <div class="home-link">
+                <a href="../index.html"><i class="fas fa-home"></i> Back to Home</a>
+            </div>
+        </div>
+    </div>
+    
+    <!-- API Integration Scripts -->
+    <script src="../js/config.js"></script>
+    <script src="../js/auth.js"></script>
+    <script src="../js/api.js"></script>
+    <script src="../js/utils.js"></script>
+    <script src="../js/auth.service.js"></script>
+    <script>
+        document.getElementById('pharmacyLoginForm').addEventListener('submit', async function(e) {
+            e.preventDefault();
+            
+            const email = document.getElementById('email').value;
+            const password = document.getElementById('password').value;
+            
+            try {
+                Utils.showLoading();
+                const response = await AuthService.login({ email, password });
+                Utils.hideLoading();
+                
+                // Check if user has pharmacy role
+                if (response.data && response.data.user && response.data.user.role !== 'pharmacy') {
+                    Utils.showToast('Access denied. Pharmacy account required.', 'error');
+                    Auth.logout();
+                    return;
+                }
+                
+                Utils.showToast('Login successful!', 'success');
+                setTimeout(() => {
+                    window.location.href = 'dashboard.html';
+                }, 1000);
+            } catch (error) {
+                Utils.hideLoading();
+                Utils.showToast(error.message || 'Login failed', 'error');
+            }
+        });
+    </script>
+</body>
+
+</html>

@@ -1,0 +1,225 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Manage Users - MedAssist Now</title>
+    <link rel="stylesheet" href="../styles/dashboard-modern.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <style>
+        .empty-state { text-align: center; padding: 60px 20px; color: var(--text-secondary); }
+        .empty-state i { font-size: 4rem; margin-bottom: 20px; opacity: 0.5; }
+        .search-bar { display: flex; gap: 15px; flex-wrap: wrap; }
+        @media (max-width: 768px) {
+            .dashboard-header .header-content { flex-direction: column; gap: 15px; text-align: center; }
+            .header-actions { justify-content: center; }
+            .search-bar { flex-direction: column; }
+            .search-bar input, .search-bar select { width: 100% !important; }
+        }
+    </style>
+</head>
+<body data-required-role="admin">
+    <script src="../js/config.js"></script>
+    <script>
+        (async function() {
+            const token = localStorage.getItem('token');
+            if (!token) { window.location.replace('login.html'); return; }
+            try {
+                const response = await fetch(`${API_CONFIG.BASE_URL}/auth/me`, { headers: { 'Authorization': `Bearer ${token}` } });
+                if (!response.ok) { localStorage.clear(); window.location.replace('login.html'); return; }
+                const data = await response.json();
+                if (data.data.user.role !== 'admin') { alert('Access denied. Admin role required.'); localStorage.clear(); window.location.replace('login.html'); return; }
+                localStorage.setItem('userCache', JSON.stringify(data.data.user));
+            } catch (e) { localStorage.clear(); window.location.replace('login.html'); }
+        })();
+    </script>
+    
+    <div class="emergency-banner">
+        <div class="container">
+            <div class="banner-content">
+                <i class="fas fa-ambulance"></i>
+                <span>Admin Dashboard - Manage all platform users</span>
+                <a href="dashboard.html" class="emergency-btn">Dashboard</a>
+            </div>
+        </div>
+    </div>
+    
+    <div class="dashboard-container">
+        <div class="dashboard-header">
+            <div class="header-content">
+                <div class="user-welcome">
+                    <h1><i class="fas fa-users"></i> Manage Users</h1>
+                    <p>View and manage all platform users</p>
+                </div>
+                <div class="header-actions">
+                    <a href="dashboard.html" class="icon-btn"><i class="fas fa-home"></i></a>
+                    <a href="settings.html" class="profile-btn"><i class="fas fa-cog"></i></a>
+                </div>
+            </div>
+        </div>
+        
+        <div class="dashboard-content">
+            <div class="section-card">
+                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 25px; flex-wrap: wrap; gap: 15px;">
+                    <h2 class="section-title"><i class="fas fa-list"></i> All Users</h2>
+                    <div class="search-bar">
+                        <input type="text" id="searchInput" class="form-input" placeholder="Search users..." style="width: 300px;" onkeyup="filterUsers()">
+                        <select id="roleFilter" class="form-input" style="width: 150px;" onchange="filterUsers()">
+                            <option value="">All Roles</option>
+                            <option value="user">Patients</option>
+                            <option value="pharmacy">Pharmacies</option>
+                            <option value="delivery">Delivery</option>
+                        </select>
+                    </div>
+                </div>
+                
+                <div class="table-container">
+                    <table class="data-table">
+                        <thead>
+                            <tr>
+                                <th>User ID</th>
+                                <th>Name</th>
+                                <th>Email</th>
+                                <th>Phone</th>
+                                <th>Role</th>
+                                <th>Joined</th>
+                                <th>Status</th>
+                                <th>Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody id="usersTableBody">
+                            <tr>
+                                <td colspan="8" style="text-align: center; padding: 40px;">
+                                    <i class="fas fa-spinner fa-spin" style="font-size: 2rem; color: var(--primary-color);"></i>
+                                    <p style="margin-top: 10px;">Loading users...</p>
+                                </td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <script src="../js/config.js"></script>
+    <script src="../js/auth.js"></script>
+    <script src="../js/api.js"></script>
+    <script src="../js/utils.js"></script>
+    <script>
+        let allUsers = [];
+        
+        document.addEventListener('DOMContentLoaded', function() {
+            loadUsers();
+        });
+        
+        async function loadUsers() {
+            try {
+                const token = localStorage.getItem('token');
+                const response = await fetch(`${API_CONFIG.BASE_URL}/users`, {
+                    headers: { 'Authorization': `Bearer ${token}` }
+                });
+                
+                if (response.ok) {
+                    const data = await response.json();
+                    allUsers = data.data || data.users || [];
+                    displayUsers(allUsers);
+                } else {
+                    showNoUsers();
+                }
+            } catch (error) {
+                console.error('Error loading users:', error);
+                showNoUsers();
+            }
+        }
+        
+        function filterUsers() {
+            const search = document.getElementById('searchInput').value.toLowerCase();
+            const role = document.getElementById('roleFilter').value;
+            
+            let filtered = allUsers.filter(user => {
+                const matchesSearch = !search || 
+                    (user.name || '').toLowerCase().includes(search) ||
+                    (user.email || '').toLowerCase().includes(search);
+                const matchesRole = !role || user.role === role;
+                return matchesSearch && matchesRole;
+            });
+            
+            displayUsers(filtered);
+        }
+        
+        function displayUsers(users) {
+            const tbody = document.getElementById('usersTableBody');
+            
+            if (users.length === 0) {
+                showNoUsers();
+                return;
+            }
+            
+            tbody.innerHTML = users.map(user => {
+                const joinDate = new Date(user.createdAt);
+                const statusClass = user.status === 'suspended' ? 'danger' : 'success';
+                const statusText = user.status === 'suspended' ? 'Suspended' : 'Active';
+                
+                return `
+                    <tr>
+                        <td><strong>#${user._id?.slice(-6).toUpperCase() || 'N/A'}</strong></td>
+                        <td>${user.name || 'N/A'}</td>
+                        <td>${user.email || 'N/A'}</td>
+                        <td>${user.phone || 'N/A'}</td>
+                        <td><span class="badge badge-info">${user.role || 'user'}</span></td>
+                        <td>${joinDate.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}</td>
+                        <td><span class="badge badge-${statusClass}">${statusText}</span></td>
+                        <td>
+                            <button class="icon-btn" title="Edit" onclick="editUser('${user._id}')"><i class="fas fa-edit"></i></button>
+                            ${user.status === 'suspended' 
+                                ? `<button class="icon-btn" title="Activate" onclick="toggleUserStatus('${user._id}', 'active')"><i class="fas fa-check"></i></button>`
+                                : `<button class="icon-btn" title="Suspend" onclick="toggleUserStatus('${user._id}', 'suspended')"><i class="fas fa-ban"></i></button>`
+                            }
+                        </td>
+                    </tr>
+                `;
+            }).join('');
+        }
+        
+        async function toggleUserStatus(userId, newStatus) {
+            if (!confirm(`Are you sure you want to ${newStatus === 'suspended' ? 'suspend' : 'activate'} this user?`)) return;
+            
+            try {
+                const token = localStorage.getItem('token');
+                const response = await fetch(`${API_CONFIG.BASE_URL}/users/${userId}/status`, {
+                    method: 'PUT',
+                    headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` },
+                    body: JSON.stringify({ status: newStatus })
+                });
+                
+                if (response.ok) {
+                    Utils.showToast(`User ${newStatus === 'suspended' ? 'suspended' : 'activated'} successfully!`, 'success');
+                    loadUsers();
+                } else {
+                    Utils.showToast('Failed to update user status', 'error');
+                }
+            } catch (error) {
+                Utils.showToast('Error updating user', 'error');
+            }
+        }
+        
+        function editUser(userId) {
+            Utils.showToast('Edit feature coming soon!', 'info');
+        }
+        
+        function showNoUsers() {
+            document.getElementById('usersTableBody').innerHTML = `
+                <tr>
+                    <td colspan="8">
+                        <div class="empty-state">
+                            <i class="fas fa-users"></i>
+                            <h3>No Users Found</h3>
+                            <p>Users will appear here when they register</p>
+                        </div>
+                    </td>
+                </tr>
+            `;
+        }
+    </script>
+</body>
+</html>

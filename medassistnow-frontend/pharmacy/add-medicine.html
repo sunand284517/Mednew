@@ -1,0 +1,212 @@
+﻿<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Add Medicine - MedAssist Now</title>
+    <link rel="stylesheet" href="../styles/dashboard-modern.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+</head>
+<body data-required-role="pharmacy">
+    <script src="../js/config.js"></script>
+    <script>
+        (async function() {
+            const token = localStorage.getItem('token');
+            if (!token) { window.location.replace('login.html'); return; }
+            try {
+                const response = await fetch(`${API_CONFIG.BASE_URL}/auth/me`, { headers: { 'Authorization': `Bearer ${token}` } });
+                if (!response.ok) { localStorage.clear(); window.location.replace('login.html'); return; }
+                const data = await response.json();
+                if (data.data.user.role !== 'pharmacy') { alert('Access denied.'); localStorage.clear(); window.location.replace('login.html'); return; }
+                localStorage.setItem('userCache', JSON.stringify(data.data.user));
+            } catch (e) { console.error('Auth error:', e); localStorage.clear(); window.location.replace('login.html'); }
+        })();
+    </script>
+    <div class="emergency-banner">
+        <div class="container">
+            <div class="banner-content">
+                <i class="fas fa-ambulance"></i>
+                <span>Need medicines urgently? We're available 24/7 for emergency deliveries!</span>
+                <a href="../user/search.html" class="emergency-btn">Emergency Request</a>
+            </div>
+        </div>
+    </div>
+    <div class="dashboard-container">
+        <div class="dashboard-header">
+            <div class="header-content">
+                <div class="user-welcome">
+                    <h1><i class="fas fa-plus-circle"></i> Add New Medicine</h1>
+                    <p>Add medicines to your pharmacy inventory</p>
+                </div>
+                <div class="header-actions">
+                    <a href="dashboard.html" class="icon-btn"><i class="fas fa-home"></i></a>
+                    <a href="stock.html" class="icon-btn"><i class="fas fa-boxes"></i></a>
+                    <a href="profile.html" class="profile-btn" id="userInitials">P</a>
+                </div>
+            </div>
+        </div>
+        <div class="dashboard-content">
+            <div class="section-card">
+                <h2 class="section-title"><i class="fas fa-pills"></i> Medicine Information</h2>
+                <form id="addMedicineForm" style="max-width: 800px;">
+                    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 20px;">
+                        <div class="form-group">
+                            <label class="form-label">Medicine Name</label>
+                            <input type="text" id="medicineName" class="form-input" placeholder="e.g., Paracetamol" required>
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label">Generic Name</label>
+                            <input type="text" id="genericName" class="form-input" placeholder="e.g., Acetaminophen">
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label">Strength/Dosage</label>
+                            <input type="text" id="dosage" class="form-input" placeholder="e.g., 500mg" required>
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label">Form</label>
+                            <select id="form" class="form-input" required>
+                                <option>Tablet</option>
+                                <option>Capsule</option>
+                                <option>Syrup</option>
+                                <option>Injection</option>
+                            </select>
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label">Manufacturer</label>
+                            <input type="text" id="manufacturer" class="form-input" placeholder="e.g., ABC Pharma" required>
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label">Category</label>
+                            <select id="category" class="form-input" required>
+                                <option>Pain Relief</option>
+                                <option>Antibiotic</option>
+                                <option>Vitamin</option>
+                                <option>Other</option>
+                            </select>
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label">Price per Unit (₹)</label>
+                            <input type="number" id="price" class="form-input" placeholder="45" required>
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label">Stock Quantity</label>
+                            <input type="number" id="quantity" class="form-input" placeholder="100" required>
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label">Expiry Date</label>
+                            <input type="date" id="expiryDate" class="form-input" required>
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label">Prescription Required</label>
+                            <select id="prescriptionRequired" class="form-input">
+                                <option value="false">No</option>
+                                <option value="true">Yes</option>
+                            </select>
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">Description</label>
+                        <textarea id="description" class="form-input" rows="4" placeholder="Enter medicine description and usage instructions"></textarea>
+                    </div>
+                    <button type="submit" class="btn-primary" style="margin-right: 15px;">
+                        <i class="fas fa-check"></i> Add Medicine
+                    </button>
+                    <a href="stock.html" class="btn-outline">Cancel</a>
+                </form>
+            </div>
+        </div>
+    </div>
+    <script src="../js/auth.js"></script>
+    <script src="../js/api.js"></script>
+    <script src="../js/utils.js"></script>
+    <script>
+        // Initialize user initials
+        document.addEventListener('DOMContentLoaded', function() {
+            const userCache = localStorage.getItem('userCache');
+            if (userCache) {
+                const user = JSON.parse(userCache);
+                const name = user.name || user.pharmacyName || 'Pharmacy';
+                const initials = name.split(' ').map(n => n[0]).join('').toUpperCase().slice(0, 2);
+                document.getElementById('userInitials').textContent = initials || 'P';
+            }
+        });
+
+        // Handle form submission
+        document.getElementById('addMedicineForm').addEventListener('submit', async function(e) {
+            e.preventDefault();
+
+            const userCache = localStorage.getItem('userCache');
+            if (!userCache) {
+                alert('Please login again');
+                window.location.href = 'login.html';
+                return;
+            }
+
+            const user = JSON.parse(userCache);
+            const pharmacyId = user._id;
+
+            const medicineData = {
+                name: document.getElementById('medicineName').value.trim(),
+                genericName: document.getElementById('genericName').value.trim(),
+                dosage: document.getElementById('dosage').value.trim(),
+                form: document.getElementById('form').value,
+                manufacturer: document.getElementById('manufacturer').value.trim(),
+                category: document.getElementById('category').value,
+                price: parseFloat(document.getElementById('price').value),
+                description: document.getElementById('description').value.trim(),
+                prescriptionRequired: document.getElementById('prescriptionRequired').value === 'true'
+            };
+
+            const inventoryData = {
+                pharmacyId: pharmacyId,
+                quantity: parseInt(document.getElementById('quantity').value),
+                expiryDate: document.getElementById('expiryDate').value,
+                price: parseFloat(document.getElementById('price').value)
+            };
+
+            try {
+                // Show loading
+                const submitBtn = e.target.querySelector('button[type="submit"]');
+                const originalText = submitBtn.innerHTML;
+                submitBtn.disabled = true;
+                submitBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Adding...';
+
+                // First, create or get medicine
+                const medicineResponse = await API.request('/medicines', {
+                    method: 'POST',
+                    body: JSON.stringify(medicineData)
+                });
+
+                if (!medicineResponse.success) {
+                    throw new Error(medicineResponse.message || 'Failed to add medicine');
+                }
+
+                const medicineId = medicineResponse.data.medicine._id;
+
+                // Then, add to inventory
+                inventoryData.medicineId = medicineId;
+                const inventoryResponse = await API.request('/inventory', {
+                    method: 'POST',
+                    body: JSON.stringify(inventoryData)
+                });
+
+                if (!inventoryResponse.success) {
+                    throw new Error(inventoryResponse.message || 'Failed to add to inventory');
+                }
+
+                alert('Medicine added successfully!');
+                window.location.href = 'stock.html';
+
+            } catch (error) {
+                console.error('Error adding medicine:', error);
+                alert(error.message || 'Failed to add medicine. Please try again.');
+                
+                // Reset button
+                const submitBtn = e.target.querySelector('button[type="submit"]');
+                submitBtn.disabled = false;
+                submitBtn.innerHTML = '<i class="fas fa-check"></i> Add Medicine';
+            }
+        });
+    </script>
+</body>
+</html>

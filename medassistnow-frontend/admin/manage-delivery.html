@@ -1,0 +1,229 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Manage Delivery Partners - MedAssist Now</title>
+    <link rel="stylesheet" href="../styles/dashboard-modern.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <style>
+        .empty-state { text-align: center; padding: 60px 20px; color: var(--text-secondary); }
+        .empty-state i { font-size: 4rem; margin-bottom: 20px; opacity: 0.5; }
+        .search-bar { display: flex; gap: 15px; flex-wrap: wrap; }
+        @media (max-width: 768px) {
+            .dashboard-header .header-content { flex-direction: column; gap: 15px; text-align: center; }
+            .header-actions { justify-content: center; }
+            .search-bar { flex-direction: column; }
+            .search-bar input, .search-bar select { width: 100% !important; }
+        }
+    </style>
+</head>
+<body data-required-role="admin">
+    <script src="../js/config.js"></script>
+    <script>
+        (async function() {
+            const token = localStorage.getItem('token');
+            if (!token) { window.location.replace('login.html'); return; }
+            try {
+                const response = await fetch(`${API_CONFIG.BASE_URL}/auth/me`, { headers: { 'Authorization': `Bearer ${token}` } });
+                if (!response.ok) { localStorage.clear(); window.location.replace('login.html'); return; }
+                const data = await response.json();
+                if (data.data.user.role !== 'admin') { alert('Access denied.'); localStorage.clear(); window.location.replace('login.html'); return; }
+                localStorage.setItem('userCache', JSON.stringify(data.data.user));
+            } catch (e) { localStorage.clear(); window.location.replace('login.html'); }
+        })();
+    </script>
+    
+    <div class="emergency-banner">
+        <div class="container">
+            <div class="banner-content">
+                <i class="fas fa-ambulance"></i>
+                <span>Admin Dashboard - Manage delivery partners</span>
+                <a href="dashboard.html" class="emergency-btn">Dashboard</a>
+            </div>
+        </div>
+    </div>
+    
+    <div class="dashboard-container">
+        <div class="dashboard-header">
+            <div class="header-content">
+                <div class="user-welcome">
+                    <h1><i class="fas fa-motorcycle"></i> Manage Delivery Partners</h1>
+                    <p>View and manage all delivery partners</p>
+                </div>
+                <div class="header-actions">
+                    <a href="dashboard.html" class="icon-btn"><i class="fas fa-home"></i></a>
+                    <a href="settings.html" class="profile-btn"><i class="fas fa-cog"></i></a>
+                </div>
+            </div>
+        </div>
+        
+        <div class="dashboard-content">
+            <div class="section-card">
+                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 25px; flex-wrap: wrap; gap: 15px;">
+                    <h2 class="section-title"><i class="fas fa-list"></i> All Delivery Partners</h2>
+                    <div class="search-bar">
+                        <input type="text" id="searchInput" class="form-input" placeholder="Search partners..." style="width: 300px;" onkeyup="filterPartners()">
+                        <select id="statusFilter" class="form-input" style="width: 150px;" onchange="filterPartners()">
+                            <option value="">All Status</option>
+                            <option value="active">Active</option>
+                            <option value="inactive">Inactive</option>
+                        </select>
+                    </div>
+                </div>
+                
+                <div class="table-container">
+                    <table class="data-table">
+                        <thead>
+                            <tr>
+                                <th>Partner ID</th>
+                                <th>Name</th>
+                                <th>Phone</th>
+                                <th>License</th>
+                                <th>Vehicle</th>
+                                <th>Deliveries</th>
+                                <th>Rating</th>
+                                <th>Status</th>
+                                <th>Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody id="partnersTableBody">
+                            <tr>
+                                <td colspan="9" style="text-align: center; padding: 40px;">
+                                    <i class="fas fa-spinner fa-spin" style="font-size: 2rem; color: var(--primary-color);"></i>
+                                    <p style="margin-top: 10px;">Loading delivery partners...</p>
+                                </td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <script src="../js/config.js"></script>
+    <script src="../js/auth.js"></script>
+    <script src="../js/api.js"></script>
+    <script src="../js/utils.js"></script>
+    <script>
+        let allPartners = [];
+        
+        document.addEventListener('DOMContentLoaded', function() {
+            loadPartners();
+        });
+        
+        async function loadPartners() {
+            try {
+                const token = localStorage.getItem('token');
+                const response = await fetch(`${API_CONFIG.BASE_URL}/users?role=delivery`, {
+                    headers: { 'Authorization': `Bearer ${token}` }
+                });
+                
+                if (response.ok) {
+                    const data = await response.json();
+                    allPartners = data.data || data.users || [];
+                    displayPartners(allPartners);
+                } else {
+                    showNoPartners();
+                }
+            } catch (error) {
+                console.error('Error loading partners:', error);
+                showNoPartners();
+            }
+        }
+        
+        function filterPartners() {
+            const search = document.getElementById('searchInput').value.toLowerCase();
+            const status = document.getElementById('statusFilter').value;
+            
+            let filtered = allPartners.filter(partner => {
+                const matchesSearch = !search || 
+                    (partner.name || '').toLowerCase().includes(search) ||
+                    (partner.phone || '').includes(search);
+                const matchesStatus = !status || partner.status === status;
+                return matchesSearch && matchesStatus;
+            });
+            
+            displayPartners(filtered);
+        }
+        
+        function displayPartners(partners) {
+            const tbody = document.getElementById('partnersTableBody');
+            
+            if (partners.length === 0) {
+                showNoPartners();
+                return;
+            }
+            
+            tbody.innerHTML = partners.map(partner => {
+                const statusClass = partner.status === 'inactive' ? 'danger' : 'success';
+                const statusText = partner.status === 'inactive' ? 'Inactive' : 'Active';
+                
+                return `
+                    <tr>
+                        <td><strong>#${partner._id?.slice(-6).toUpperCase() || 'N/A'}</strong></td>
+                        <td>${partner.name || 'N/A'}</td>
+                        <td>${partner.phone || 'N/A'}</td>
+                        <td>${partner.licenseNumber || 'N/A'}</td>
+                        <td>${partner.vehicleNumber || 'N/A'}</td>
+                        <td>${partner.deliveryCount || 0}</td>
+                        <td>
+                            <div style="color: #f59e0b;">
+                                <i class="fas fa-star"></i> ${partner.rating || '4.5'}
+                            </div>
+                        </td>
+                        <td><span class="badge badge-${statusClass}">${statusText}</span></td>
+                        <td>
+                            <button class="icon-btn" title="View" onclick="viewPartner('${partner._id}')"><i class="fas fa-eye"></i></button>
+                            ${partner.status === 'inactive' 
+                                ? `<button class="icon-btn" title="Activate" onclick="toggleStatus('${partner._id}', 'active')"><i class="fas fa-check"></i></button>`
+                                : `<button class="icon-btn" title="Deactivate" onclick="toggleStatus('${partner._id}', 'inactive')"><i class="fas fa-ban"></i></button>`
+                            }
+                        </td>
+                    </tr>
+                `;
+            }).join('');
+        }
+        
+        async function toggleStatus(partnerId, newStatus) {
+            if (!confirm(`Are you sure you want to ${newStatus === 'inactive' ? 'deactivate' : 'activate'} this partner?`)) return;
+            
+            try {
+                const token = localStorage.getItem('token');
+                const response = await fetch(`${API_CONFIG.BASE_URL}/users/${partnerId}/status`, {
+                    method: 'PUT',
+                    headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` },
+                    body: JSON.stringify({ status: newStatus })
+                });
+                
+                if (response.ok) {
+                    Utils.showToast(`Partner ${newStatus === 'inactive' ? 'deactivated' : 'activated'} successfully!`, 'success');
+                    loadPartners();
+                } else {
+                    Utils.showToast('Failed to update partner status', 'error');
+                }
+            } catch (error) {
+                Utils.showToast('Error updating partner', 'error');
+            }
+        }
+        
+        function viewPartner(partnerId) {
+            Utils.showToast('View partner feature coming soon!', 'info');
+        }
+        
+        function showNoPartners() {
+            document.getElementById('partnersTableBody').innerHTML = `
+                <tr>
+                    <td colspan="9">
+                        <div class="empty-state">
+                            <i class="fas fa-motorcycle"></i>
+                            <h3>No Delivery Partners Found</h3>
+                            <p>Delivery partners will appear here when they register</p>
+                        </div>
+                    </td>
+                </tr>
+            `;
+        }
+    </script>
+</body>
+</html>

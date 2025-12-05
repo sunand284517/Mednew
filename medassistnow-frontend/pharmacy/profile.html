@@ -1,0 +1,528 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Pharmacy Profile - MedAssist Now</title>
+    <link rel="stylesheet" href="../styles/dashboard-modern.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <style>
+        .profile-grid {
+            display: grid;
+            grid-template-columns: 300px 1fr;
+            gap: 25px;
+        }
+        
+        .form-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 20px;
+        }
+        
+        .form-grid .full-width {
+            grid-column: 1 / -1;
+        }
+        
+        .form-input:not([readonly]):not([disabled]) {
+            border-color: #10b981;
+            background: #f0fdf4;
+        }
+        
+        .form-input[readonly], .form-input[disabled] {
+            background: #f8fafc;
+            cursor: not-allowed;
+        }
+        
+        .btn-group {
+            display: flex;
+            gap: 10px;
+            margin-top: 20px;
+        }
+        
+        .btn-save, .btn-cancel {
+            padding: 12px 24px;
+            border-radius: 10px;
+            font-weight: 600;
+            cursor: pointer;
+            border: none;
+            transition: all 0.3s;
+        }
+        
+        .btn-save {
+            background: linear-gradient(135deg, #10b981 0%, #34d399 100%);
+            color: white;
+        }
+        
+        .btn-cancel {
+            background: #f1f5f9;
+            color: #64748b;
+        }
+        
+        .btn-save:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 15px rgba(16, 185, 129, 0.3);
+        }
+        
+        .hidden { display: none !important; }
+        
+        .success-toast {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            background: #10b981;
+            color: white;
+            padding: 15px 25px;
+            border-radius: 10px;
+            box-shadow: 0 4px 15px rgba(16, 185, 129, 0.3);
+            z-index: 1000;
+            animation: slideIn 0.3s ease;
+        }
+        
+        @keyframes slideIn {
+            from { transform: translateX(100%); opacity: 0; }
+            to { transform: translateX(0); opacity: 1; }
+        }
+        
+        .stat-item {
+            padding: 12px 0;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            color: #64748b;
+        }
+        
+        .hours-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr 1fr;
+            gap: 15px;
+        }
+        
+        .hours-day {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        
+        .hours-day label {
+            width: 80px;
+            font-size: 0.9rem;
+            color: #64748b;
+        }
+        
+        @media (max-width: 1024px) {
+            .profile-grid { grid-template-columns: 1fr; }
+            .profile-sidebar { max-width: 400px; margin: 0 auto; }
+            .hours-grid { grid-template-columns: 1fr 1fr; }
+        }
+        
+        @media (max-width: 768px) {
+            .form-grid { grid-template-columns: 1fr; }
+            .dashboard-header .header-content { flex-direction: column; gap: 15px; text-align: center; }
+            .header-actions { justify-content: center; }
+            .section-header { flex-direction: column; gap: 15px; align-items: flex-start; }
+            .btn-group { flex-direction: column; }
+            .btn-save, .btn-cancel { width: 100%; }
+            .hours-grid { grid-template-columns: 1fr; }
+        }
+        
+        @media (max-width: 480px) {
+            .dashboard-container { padding: 10px; }
+            .section-card { padding: 20px 15px; }
+        }
+    </style>
+</head>
+<body data-required-role="pharmacy">
+    <script src="../js/config.js"></script>
+    <script>
+        (async function() {
+            const token = localStorage.getItem('token');
+            if (!token) { window.location.replace('login.html'); return; }
+            try {
+                const response = await fetch(`${API_CONFIG.BASE_URL}/auth/me`, {
+                    headers: { 'Authorization': `Bearer ${token}` }
+                });
+                if (!response.ok) { localStorage.clear(); window.location.replace('login.html'); return; }
+                const data = await response.json();
+                const user = data.data.user;
+                if (user.role !== 'pharmacy') {
+                    alert('Access denied. Pharmacy role required.');
+                    localStorage.clear();
+                    window.location.replace('login.html');
+                    return;
+                }
+                localStorage.setItem('userCache', JSON.stringify(user));
+            } catch (e) {
+                localStorage.clear();
+                window.location.replace('login.html');
+            }
+        })();
+    </script>
+    
+    <div class="emergency-banner">
+        <div class="container">
+            <div class="banner-content">
+                <i class="fas fa-ambulance"></i>
+                <span>Priority order requests from hospitals receive instant notifications!</span>
+                <a href="orders.html" class="emergency-btn">View Orders</a>
+            </div>
+        </div>
+    </div>
+    
+    <div class="dashboard-container">
+        <div class="dashboard-header">
+            <div class="header-content">
+                <div class="user-welcome">
+                    <h1><i class="fas fa-store"></i> Pharmacy Profile</h1>
+                    <p>Manage your pharmacy information</p>
+                </div>
+                <div class="header-actions">
+                    <a href="dashboard.html" class="icon-btn"><i class="fas fa-home"></i></a>
+                    <a href="stock.html" class="icon-btn"><i class="fas fa-boxes"></i></a>
+                    <a href="orders.html" class="icon-btn"><i class="fas fa-clipboard-list"></i></a>
+                    <a href="profile.html" class="profile-btn" id="headerInitials">PH</a>
+                    <button id="logoutBtn" class="icon-btn" title="Logout" style="background: linear-gradient(135deg, #ef4444 0%, #dc2626 100%);">
+                        <i class="fas fa-sign-out-alt"></i>
+                    </button>
+                </div>
+            </div>
+        </div>
+        
+        <div class="dashboard-content">
+            <div class="profile-grid">
+                <!-- Profile Sidebar -->
+                <div class="profile-sidebar">
+                    <div class="section-card" style="height: fit-content;">
+                        <div style="text-align: center; padding: 20px 0;">
+                            <div id="profileInitials" style="width: 120px; height: 120px; margin: 0 auto 15px; background: linear-gradient(135deg, #10b981 0%, #34d399 100%); border-radius: 50%; display: flex; align-items: center; justify-content: center; color: white; font-size: 48px; font-weight: 600;">PH</div>
+                            <h3 id="profileName" style="margin: 10px 0 5px; font-size: 20px;">Loading...</h3>
+                            <p id="memberSince" style="color: #64748b; font-size: 14px;">Loading...</p>
+                        </div>
+                        <div style="border-top: 1px solid #f1f5f9; padding: 20px 0;">
+                            <div class="stat-item" style="color: #10b981;">
+                                <i class="fas fa-shield-alt"></i>
+                                <span id="verificationStatus">Verified Pharmacy</span>
+                            </div>
+                            <div class="stat-item">
+                                <i class="fas fa-star"></i>
+                                <span id="ratingInfo">Loading...</span>
+                            </div>
+                            <div class="stat-item">
+                                <i class="fas fa-box"></i>
+                                <span id="inventoryCount">Loading...</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Profile Content -->
+                <div>
+                    <!-- Business Information -->
+                    <div class="section-card" style="margin-bottom: 25px;">
+                        <div class="section-header">
+                            <h2 class="section-title"><i class="fas fa-store-alt"></i> Business Information</h2>
+                            <button class="btn-primary" id="editBusinessBtn" style="padding: 8px 16px; font-size: 0.9rem;" onclick="toggleEditMode('business')">
+                                <i class="fas fa-edit"></i> Edit
+                            </button>
+                        </div>
+                        <form id="businessForm" class="form-grid">
+                            <div class="form-group full-width">
+                                <label class="form-label">Pharmacy Name</label>
+                                <input type="text" id="pharmacyName" class="form-input" placeholder="Enter pharmacy name" readonly>
+                            </div>
+                            <div class="form-group">
+                                <label class="form-label">License Number</label>
+                                <input type="text" id="licenseNumber" class="form-input" placeholder="Enter license number" readonly>
+                            </div>
+                            <div class="form-group">
+                                <label class="form-label">GST Number</label>
+                                <input type="text" id="gstNumber" class="form-input" placeholder="Enter GST number" readonly>
+                            </div>
+                            <div class="form-group">
+                                <label class="form-label">Contact Phone</label>
+                                <input type="tel" id="phone" class="form-input" placeholder="Enter phone" readonly>
+                            </div>
+                            <div class="form-group">
+                                <label class="form-label">Contact Email</label>
+                                <input type="email" id="email" class="form-input" placeholder="Enter email" readonly>
+                            </div>
+                            <div class="form-group full-width">
+                                <label class="form-label">Full Address</label>
+                                <textarea id="address" class="form-input" rows="2" placeholder="Enter address" readonly></textarea>
+                            </div>
+                            <div class="btn-group full-width hidden" id="businessBtnGroup">
+                                <button type="button" class="btn-save" onclick="saveBusinessInfo()">
+                                    <i class="fas fa-save"></i> Save Changes
+                                </button>
+                                <button type="button" class="btn-cancel" onclick="cancelEdit('business')">
+                                    <i class="fas fa-times"></i> Cancel
+                                </button>
+                            </div>
+                        </form>
+                    </div>
+                    
+                    <!-- Operating Hours -->
+                    <div class="section-card" style="margin-bottom: 25px;">
+                        <div class="section-header">
+                            <h2 class="section-title"><i class="fas fa-clock"></i> Operating Hours</h2>
+                            <button class="btn-primary" id="editHoursBtn" style="padding: 8px 16px; font-size: 0.9rem;" onclick="toggleEditMode('hours')">
+                                <i class="fas fa-edit"></i> Edit
+                            </button>
+                        </div>
+                        <form id="hoursForm">
+                            <div class="hours-grid">
+                                <div class="hours-day">
+                                    <label>Monday</label>
+                                    <input type="text" id="mondayHours" class="form-input" placeholder="e.g., 9:00 AM - 9:00 PM" readonly>
+                                </div>
+                                <div class="hours-day">
+                                    <label>Tuesday</label>
+                                    <input type="text" id="tuesdayHours" class="form-input" placeholder="e.g., 9:00 AM - 9:00 PM" readonly>
+                                </div>
+                                <div class="hours-day">
+                                    <label>Wednesday</label>
+                                    <input type="text" id="wednesdayHours" class="form-input" placeholder="e.g., 9:00 AM - 9:00 PM" readonly>
+                                </div>
+                                <div class="hours-day">
+                                    <label>Thursday</label>
+                                    <input type="text" id="thursdayHours" class="form-input" placeholder="e.g., 9:00 AM - 9:00 PM" readonly>
+                                </div>
+                                <div class="hours-day">
+                                    <label>Friday</label>
+                                    <input type="text" id="fridayHours" class="form-input" placeholder="e.g., 9:00 AM - 9:00 PM" readonly>
+                                </div>
+                                <div class="hours-day">
+                                    <label>Saturday</label>
+                                    <input type="text" id="saturdayHours" class="form-input" placeholder="e.g., 9:00 AM - 9:00 PM" readonly>
+                                </div>
+                                <div class="hours-day">
+                                    <label>Sunday</label>
+                                    <input type="text" id="sundayHours" class="form-input" placeholder="e.g., Closed" readonly>
+                                </div>
+                            </div>
+                            <div class="btn-group hidden" id="hoursBtnGroup">
+                                <button type="button" class="btn-save" onclick="saveHoursInfo()">
+                                    <i class="fas fa-save"></i> Update Hours
+                                </button>
+                                <button type="button" class="btn-cancel" onclick="cancelEdit('hours')">
+                                    <i class="fas fa-times"></i> Cancel
+                                </button>
+                            </div>
+                        </form>
+                    </div>
+                    
+                    <!-- Bank Details -->
+                    <div class="section-card">
+                        <div class="section-header">
+                            <h2 class="section-title"><i class="fas fa-university"></i> Bank Details</h2>
+                            <button class="btn-primary" id="editBankBtn" style="padding: 8px 16px; font-size: 0.9rem;" onclick="toggleEditMode('bank')">
+                                <i class="fas fa-edit"></i> Edit
+                            </button>
+                        </div>
+                        <form id="bankForm" class="form-grid">
+                            <div class="form-group">
+                                <label class="form-label">Account Holder Name</label>
+                                <input type="text" id="accountName" class="form-input" placeholder="Enter account holder name" readonly>
+                            </div>
+                            <div class="form-group">
+                                <label class="form-label">Account Number</label>
+                                <input type="text" id="accountNumber" class="form-input" placeholder="Enter account number" readonly>
+                            </div>
+                            <div class="form-group">
+                                <label class="form-label">IFSC Code</label>
+                                <input type="text" id="ifscCode" class="form-input" placeholder="Enter IFSC code" readonly>
+                            </div>
+                            <div class="form-group">
+                                <label class="form-label">Bank Name</label>
+                                <input type="text" id="bankName" class="form-input" placeholder="Enter bank name" readonly>
+                            </div>
+                            <div class="btn-group full-width hidden" id="bankBtnGroup">
+                                <button type="button" class="btn-save" onclick="saveBankInfo()">
+                                    <i class="fas fa-save"></i> Save Bank Details
+                                </button>
+                                <button type="button" class="btn-cancel" onclick="cancelEdit('bank')">
+                                    <i class="fas fa-times"></i> Cancel
+                                </button>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <script src="../js/auth.js"></script>
+    <script src="../js/api.js"></script>
+    <script src="../js/utils.js"></script>
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            loadPharmacyProfile();
+            
+            document.getElementById('logoutBtn').addEventListener('click', function() {
+                if (confirm('Are you sure you want to logout?')) {
+                    Auth.logout();
+                    window.location.href = 'login.html';
+                }
+            });
+        });
+        
+        function loadPharmacyProfile() {
+            const user = Auth.getUser();
+            if (user) {
+                const pharmacyName = user.pharmacyName || user.name || 'Pharmacy';
+                const initials = pharmacyName.split(' ').map(n => n[0]).join('').toUpperCase().substring(0, 2);
+                
+                document.getElementById('profileName').textContent = pharmacyName;
+                document.getElementById('profileInitials').textContent = initials;
+                document.getElementById('headerInitials').textContent = initials;
+                
+                if (user.createdAt) {
+                    const date = new Date(user.createdAt);
+                    document.getElementById('memberSince').textContent = `Member since ${date.toLocaleDateString('en-US', { year: 'numeric', month: 'short' })}`;
+                }
+                
+                document.getElementById('ratingInfo').textContent = `${user.rating || '4.5'} Rating (${user.ordersCompleted || 0} orders)`;
+                document.getElementById('inventoryCount').textContent = `${user.inventoryCount || 0} items in stock`;
+                
+                // Business info
+                document.getElementById('pharmacyName').value = pharmacyName;
+                document.getElementById('licenseNumber').value = user.licenseNumber || '';
+                document.getElementById('gstNumber').value = user.gstNumber || '';
+                document.getElementById('phone').value = user.phone || user.phoneNumber || '';
+                document.getElementById('email').value = user.email || '';
+                document.getElementById('address').value = typeof user.address === 'string' ? user.address : '';
+                
+                // Operating hours - handle both string and object formats
+                let hours = {};
+                if (typeof user.operatingHours === 'string') {
+                    // If stored as single string, apply to all days
+                    const defaultHours = user.operatingHours;
+                    hours = { monday: defaultHours, tuesday: defaultHours, wednesday: defaultHours, thursday: defaultHours, friday: defaultHours, saturday: defaultHours, sunday: 'Closed' };
+                } else if (typeof user.operatingHours === 'object') {
+                    hours = user.operatingHours || {};
+                }
+                document.getElementById('mondayHours').value = hours.monday || '9:00 AM - 9:00 PM';
+                document.getElementById('tuesdayHours').value = hours.tuesday || '9:00 AM - 9:00 PM';
+                document.getElementById('wednesdayHours').value = hours.wednesday || '9:00 AM - 9:00 PM';
+                document.getElementById('thursdayHours').value = hours.thursday || '9:00 AM - 9:00 PM';
+                document.getElementById('fridayHours').value = hours.friday || '9:00 AM - 9:00 PM';
+                document.getElementById('saturdayHours').value = hours.saturday || '9:00 AM - 6:00 PM';
+                document.getElementById('sundayHours').value = hours.sunday || 'Closed';
+                
+                // Bank info - handle nested bankDetails object
+                const bank = user.bankDetails || {};
+                document.getElementById('accountName').value = bank.accountName || user.accountName || pharmacyName;
+                document.getElementById('accountNumber').value = bank.accountNumber || user.accountNumber || '';
+                document.getElementById('ifscCode').value = bank.ifscCode || user.ifscCode || '';
+                document.getElementById('bankName').value = bank.bankName || user.bankName || '';
+            }
+        }
+        
+        function toggleEditMode(section) {
+            const form = document.getElementById(section + 'Form');
+            const btnGroup = document.getElementById(section + 'BtnGroup');
+            const editBtn = document.getElementById('edit' + section.charAt(0).toUpperCase() + section.slice(1) + 'Btn');
+            
+            form.querySelectorAll('.form-input').forEach(input => {
+                if (input.id !== 'email') {
+                    input.readOnly = false;
+                }
+            });
+            
+            btnGroup.classList.remove('hidden');
+            editBtn.classList.add('hidden');
+        }
+        
+        function cancelEdit(section) {
+            const form = document.getElementById(section + 'Form');
+            const btnGroup = document.getElementById(section + 'BtnGroup');
+            const editBtn = document.getElementById('edit' + section.charAt(0).toUpperCase() + section.slice(1) + 'Btn');
+            
+            form.querySelectorAll('.form-input').forEach(input => {
+                input.readOnly = true;
+            });
+            
+            btnGroup.classList.add('hidden');
+            editBtn.classList.remove('hidden');
+            loadPharmacyProfile();
+        }
+        
+        async function saveBusinessInfo() {
+            const data = {
+                pharmacyName: document.getElementById('pharmacyName').value.trim(),
+                name: document.getElementById('pharmacyName').value.trim(),
+                licenseNumber: document.getElementById('licenseNumber').value.trim(),
+                gstNumber: document.getElementById('gstNumber').value.trim(),
+                phone: document.getElementById('phone').value.trim(),
+                address: document.getElementById('address').value.trim()
+            };
+            await saveProfile(data, 'business');
+        }
+        
+        async function saveHoursInfo() {
+            const data = {
+                operatingHours: {
+                    monday: document.getElementById('mondayHours').value.trim(),
+                    tuesday: document.getElementById('tuesdayHours').value.trim(),
+                    wednesday: document.getElementById('wednesdayHours').value.trim(),
+                    thursday: document.getElementById('thursdayHours').value.trim(),
+                    friday: document.getElementById('fridayHours').value.trim(),
+                    saturday: document.getElementById('saturdayHours').value.trim(),
+                    sunday: document.getElementById('sundayHours').value.trim()
+                }
+            };
+            await saveProfile(data, 'hours');
+        }
+        
+        async function saveBankInfo() {
+            const data = {
+                accountName: document.getElementById('accountName').value.trim(),
+                accountNumber: document.getElementById('accountNumber').value.trim(),
+                ifscCode: document.getElementById('ifscCode').value.trim(),
+                bankName: document.getElementById('bankName').value.trim()
+            };
+            await saveProfile(data, 'bank');
+        }
+        
+        async function saveProfile(data, section) {
+            try {
+                const user = Auth.getUser();
+                const userId = user._id || user.id;
+                
+                if (!userId) {
+                    showToast('User ID not found. Please login again.', 'error');
+                    return;
+                }
+                
+                const token = localStorage.getItem('token');
+                const response = await fetch(`${API_CONFIG.BASE_URL}/users/${userId}`, {
+                    method: 'PUT',
+                    headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` },
+                    body: JSON.stringify(data)
+                });
+                
+                if (response.ok) {
+                    const result = await response.json();
+                    const updatedUser = result.data?.user || { ...Auth.getUser(), ...data };
+                    localStorage.setItem('userCache', JSON.stringify(updatedUser));
+                    showToast('Profile updated successfully!');
+                    cancelEdit(section);
+                } else {
+                    const error = await response.json();
+                    showToast(error.message || 'Failed to update profile', 'error');
+                }
+            } catch (error) {
+                showToast('Error updating profile', 'error');
+            }
+        }
+        
+        function showToast(message, type = 'success') {
+            const toast = document.createElement('div');
+            toast.className = 'success-toast';
+            toast.style.background = type === 'error' ? '#ef4444' : '#10b981';
+            toast.innerHTML = `<i class="fas fa-${type === 'error' ? 'times-circle' : 'check-circle'}"></i> ${message}`;
+            document.body.appendChild(toast);
+            setTimeout(() => toast.remove(), 3000);
+        }
+    </script>
+</body>
+</html>

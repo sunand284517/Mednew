@@ -1,0 +1,598 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Pharmacy Dashboard - MedAssist Now</title>
+    <link rel="stylesheet" href="../styles/dashboard-modern.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <style>
+        .pharmacy-theme .dashboard-header {
+            background: linear-gradient(135deg, #f59e0b 0%, #fbbf24 100%);
+            color: white;
+        }
+
+        .pharmacy-theme .user-welcome h1 {
+            color: white;
+            -webkit-text-fill-color: white;
+        }
+
+        .pharmacy-theme .user-welcome p {
+            color: rgba(255, 255, 255, 0.9);
+        }
+
+        .pharmacy-theme .icon-btn {
+            background: rgba(255, 255, 255, 0.2);
+            color: white;
+        }
+
+        .pharmacy-theme .icon-btn:hover {
+            background: rgba(255, 255, 255, 0.3);
+        }
+
+        .pharmacy-theme .profile-btn {
+            background: white;
+            color: var(--accent-color);
+        }
+    </style>
+</head>
+
+<body class="pharmacy-theme" data-required-role="pharmacy">
+    <script src="../js/config.js"></script>
+    <script>
+        // Proper JWT authentication with backend
+        (async function() {
+            const token = localStorage.getItem('token');
+            if (!token) {
+                window.location.replace('login.html');
+                return;
+            }
+            
+            try {
+                const response = await fetch(`${API_CONFIG.BASE_URL}/auth/me`, {
+                    headers: { 'Authorization': `Bearer ${token}` }
+                });
+                
+                if (!response.ok) {
+                    localStorage.clear();
+                    window.location.replace('login.html');
+                    return;
+                }
+                
+                const data = await response.json();
+                const user = data.data.user;
+                
+                if (user.role !== 'pharmacy') {
+                    alert('Access denied. Pharmacy role required.');
+                    localStorage.clear();
+                    window.location.replace('login.html');
+                    return;
+                }
+                
+                localStorage.setItem('userCache', JSON.stringify(user));
+                const pharmNameEl = document.getElementById('pharmacyName');
+                if (pharmNameEl) {
+                    pharmNameEl.textContent = user.pharmacyName || user.name || 'Pharmacy';
+                }
+                
+            } catch (e) {
+                console.error('Auth error:', e);
+                localStorage.clear();
+                window.location.replace('login.html');
+            }
+        })();
+    </script>
+    <!-- Emergency Banner -->
+    <div class="emergency-banner">
+        <div class="container">
+            <div class="banner-content">
+                <i class="fas fa-ambulance"></i>
+                <span>Need medicines urgently? We're available 24/7 for emergency deliveries!</span>
+                <a href="../user/search.html" class="emergency-btn">Emergency Request</a>
+            </div>
+        </div>
+    </div>
+
+    <div class="dashboard-container">
+        <div class="dashboard-header">
+            <div class="header-content">
+                <div class="user-welcome">
+                    <h1><i class="fas fa-store"></i> <span id="pharmacyName">Pharmacy</span></h1>
+                    <p>Manage your inventory and orders efficiently</p>
+                </div>
+                <div class="header-actions">
+                    <div class="notification-wrapper" style="position: relative;">
+                        <button class="icon-btn" title="Notifications" id="notificationBtn" onclick="toggleNotifications()">
+                            <i class="fas fa-bell"></i>
+                            <span class="notif-badge" id="notifBadge" style="display: none; position: absolute; top: -5px; right: -5px; background: #ef4444; color: white; font-size: 10px; font-weight: bold; padding: 2px 6px; border-radius: 10px; min-width: 16px; text-align: center;">0</span>
+                        </button>
+                        <div class="notification-dropdown" id="notificationDropdown" style="display: none; position: absolute; top: 100%; right: 0; width: 320px; max-height: 400px; overflow-y: auto; background: white; border-radius: 12px; box-shadow: 0 10px 40px rgba(0,0,0,0.15); z-index: 1000; margin-top: 10px;">
+                            <div style="padding: 15px; border-bottom: 1px solid #f1f5f9; font-weight: 600; color: #1e293b;">
+                                <i class="fas fa-bell"></i> Notifications
+                            </div>
+                            <div id="notificationList" style="padding: 10px;">
+                                <div style="text-align: center; padding: 20px; color: #94a3b8;">
+                                    <i class="fas fa-bell-slash" style="font-size: 2rem; margin-bottom: 10px; display: block;"></i>
+                                    No notifications yet
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <a href="profile.html" class="profile-btn" id="pharmacyInitials">P</a>
+                    <a href="../index.html" class="icon-btn" title="Home">
+                        <i class="fas fa-home"></i>
+                    </a>
+                    <button id="logoutBtn" class="icon-btn" title="Logout" style="background: linear-gradient(135deg, #ef4444 0%, #dc2626 100%);">
+                        <i class="fas fa-sign-out-alt"></i>
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <div class="dashboard-content">
+            <div class="quick-actions">
+                <a href="add-medicine.html" class="action-card">
+                    <div class="action-icon" style="background: var(--gradient-accent);">
+                        <i class="fas fa-plus-circle"></i>
+                    </div>
+                    <h3>Add Medicine</h3>
+                    <p>Add new medicines to your inventory</p>
+                </a>
+
+                <a href="stock.html" class="action-card">
+                    <div class="action-icon" style="background: var(--gradient-purple);">
+                        <i class="fas fa-boxes"></i>
+                    </div>
+                    <h3>Manage Stock</h3>
+                    <p>Update and track medicine stock levels</p>
+                </a>
+
+                <a href="orders.html" class="action-card">
+                    <div class="action-icon" style="background: var(--gradient-success);">
+                        <i class="fas fa-shopping-bag"></i>
+                    </div>
+                    <h3>Orders</h3>
+                    <p>View and manage customer orders</p>
+                </a>
+
+                <a href="profile.html" class="action-card">
+                    <div class="action-icon" style="background: var(--gradient-primary);">
+                        <i class="fas fa-cog"></i>
+                    </div>
+                    <h3>Settings</h3>
+                    <p>Manage pharmacy details and hours</p>
+                </a>
+            </div>
+
+            <div class="stats-grid">
+                <div class="stat-card">
+                    <div class="stat-value"
+                        style="background: var(--gradient-accent); -webkit-background-clip: text; -webkit-text-fill-color: transparent;"
+                        id="totalMedicines">0</div>
+                    <div class="stat-label">Total Medicines</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-value"
+                        style="background: var(--gradient-accent); -webkit-background-clip: text; -webkit-text-fill-color: transparent;"
+                        id="pendingOrders">0</div>
+                    <div class="stat-label">Pending Orders</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-value"
+                        style="background: var(--gradient-accent); -webkit-background-clip: text; -webkit-text-fill-color: transparent;"
+                        id="ordersToday">0</div>
+                    <div class="stat-label">Orders Today</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-value"
+                        style="background: var(--gradient-accent); -webkit-background-clip: text; -webkit-text-fill-color: transparent;"
+                        id="revenueToday">₹0</div>
+                    <div class="stat-label">Revenue Today</div>
+                </div>
+            </div>
+
+            <div class="section-card">
+                <div class="section-header">
+                    <h2 class="section-title"><i class="fas fa-clock"></i> Recent Orders</h2>
+                    <a href="orders.html" class="view-all-btn">View All <i class="fas fa-arrow-right"></i></a>
+                </div>
+
+                <div class="table-container">
+                    <table class="data-table">
+                        <thead>
+                            <tr>
+                                <th>Order ID</th>
+                                <th>Customer</th>
+                                <th>Medicines</th>
+                                <th>Amount</th>
+                                <th>Status</th>
+                                <th>Action</th>
+                            </tr>
+                        </thead>
+                        <tbody id="recentOrdersTable">
+                            <tr>
+                                <td colspan="6"
+                                    style="text-align: center; padding: 40px; color: var(--text-secondary);">
+                                    <i class="fas fa-shopping-bag"
+                                        style="font-size: 3rem; opacity: 0.3; display: block; margin-bottom: 15px;"></i>
+                                    No recent orders found
+                                </td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
+            <div class="section-card">
+                <div class="section-header">
+                    <h2 class="section-title"><i class="fas fa-exclamation-triangle"></i> Low Stock Alerts</h2>
+                    <a href="stock.html" class="view-all-btn">Manage Stock <i class="fas fa-arrow-right"></i></a>
+                </div>
+
+                <div id="lowStockContainer" style="text-align: center; padding: 40px; color: var(--text-secondary);">
+                    <i class="fas fa-check-circle"
+                        style="font-size: 3rem; opacity: 0.3; display: block; margin-bottom: 15px; color: var(--success-color);"></i>
+                    <p>All medicines are well stocked</p>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- API Integration Scripts -->
+    <script src="../js/config.js"></script>
+    <script src="../js/auth.js"></script>
+    <script src="../js/api.js"></script>
+    <script src="../js/utils.js"></script>
+    <script src="../js/order.service.js"></script>
+    <script src="../js/notification.service.js"></script>
+    <script src="https://cdn.socket.io/4.5.4/socket.io.min.js"></script>
+    <script>
+        let socket = null;
+        let notifications = [];
+        let allOrders = [];
+        
+        document.addEventListener('DOMContentLoaded', function() {
+            const user = Auth.getUser();
+            if (user) {
+                initializeSocketIO(user);
+                loadDashboardData();
+                loadNotificationsFromServer();
+                NotificationService.requestPermission();
+            }
+        });
+        
+        async function loadNotificationsFromServer() {
+            try {
+                const data = await NotificationService.getNotifications(20);
+                notifications = data.notifications.map(n => ({
+                    id: n._id,
+                    title: n.title,
+                    message: n.message,
+                    time: n.createdAt,
+                    read: n.read,
+                    orderId: n.data?.orderId
+                }));
+                updateNotificationBadge();
+                updateNotificationList();
+            } catch (error) {
+                console.error('Error loading notifications:', error);
+            }
+        }
+        
+        function initializeSocketIO(user) {
+            try {
+                socket = io(API_CONFIG.BASE_URL.replace('/api', ''), {
+                    transports: ['websocket', 'polling']
+                });
+                
+                socket.on('connect', () => {
+                    console.log('🔌 Connected to real-time updates');
+                    // Join pharmacy-specific room
+                    socket.emit('joinRoom', `pharmacy_${user._id || user.id}`);
+                });
+                
+                // Listen for new orders
+                socket.on('newOrder', (data) => {
+                    console.log('🆕 New order received:', data);
+                    NotificationService.playSound();
+                    showNewOrderNotification(data);
+                    loadDashboardData();
+                    loadNotificationsFromServer(); // Refresh from server
+                });
+                
+                socket.on('orderCreated', (data) => {
+                    console.log('📦 Order created:', data);
+                    loadDashboardData();
+                    loadNotificationsFromServer();
+                });
+                
+                socket.on('orderUpdated', (data) => {
+                    console.log('📦 Order updated:', data);
+                    loadDashboardData();
+                });
+                
+                socket.on('disconnect', () => {
+                    console.log('🔌 Disconnected from real-time updates');
+                });
+            } catch (error) {
+                console.error('Socket.IO error:', error);
+            }
+        }
+        
+        function showNewOrderNotification(data) {
+            const order = data.order;
+            const orderNumber = order._id?.slice(-6).toUpperCase() || 'NEW';
+            const message = data.message || `New order #${orderNumber} received!`;
+            
+            // Show toast
+            Utils.showToast(message, 'success');
+            
+            // Show browser notification if permitted
+            NotificationService.showBrowserNotification('MedAssist Now - New Order!', message);
+            
+            // Reload notifications from server to get the saved one
+            loadNotificationsFromServer();
+        }
+        
+        function updateNotificationBadge() {
+            const unreadCount = notifications.filter(n => !n.read).length;
+            const badge = document.getElementById('notifBadge');
+            
+            if (badge) {
+                if (unreadCount > 0) {
+                    badge.textContent = unreadCount > 9 ? '9+' : unreadCount;
+                    badge.style.display = 'block';
+                } else {
+                    badge.style.display = 'none';
+                }
+            }
+        }
+        
+        function updateNotificationList() {
+            const container = document.getElementById('notificationList');
+            if (!container) return;
+            
+            if (notifications.length === 0) {
+                container.innerHTML = `
+                    <div style="text-align: center; padding: 20px; color: #94a3b8;">
+                        <i class="fas fa-bell-slash" style="font-size: 2rem; margin-bottom: 10px; display: block;"></i>
+                        No notifications yet
+                    </div>
+                `;
+                return;
+            }
+            
+            container.innerHTML = `
+                <div style="padding: 5px 10px; text-align: right; border-bottom: 1px solid #f1f5f9;">
+                    <button onclick="markAllNotificationsRead()" style="background: none; border: none; color: #3b82f6; cursor: pointer; font-size: 12px;">
+                        Mark all as read
+                    </button>
+                </div>
+            ` + notifications.slice(0, 10).map(notif => `
+                <div style="padding: 12px; border-bottom: 1px solid #f1f5f9; cursor: pointer; ${!notif.read ? 'background: #f0f9ff;' : ''}" onclick="handleNotificationClick('${notif.id}', '${notif.orderId || ''}')">
+                    <div style="font-weight: 500; color: #1e293b; margin-bottom: 4px;">
+                        ${notif.title}
+                    </div>
+                    <div style="font-size: 0.85rem; color: #64748b; margin-bottom: 4px;">
+                        ${notif.message}
+                    </div>
+                    <div style="font-size: 0.75rem; color: #94a3b8;">
+                        ${NotificationService.getTimeAgo(notif.time)}
+                    </div>
+                </div>
+            `).join('');
+        }
+        
+        function toggleNotifications() {
+            const dropdown = document.getElementById('notificationDropdown');
+            if (dropdown) {
+                dropdown.style.display = dropdown.style.display === 'none' ? 'block' : 'none';
+            }
+        }
+        
+        async function handleNotificationClick(notifId, orderId) {
+            // Mark as read on server
+            await NotificationService.markAsRead(notifId);
+            
+            // Update local state
+            const notif = notifications.find(n => n.id === notifId);
+            if (notif) {
+                notif.read = true;
+                updateNotificationBadge();
+                updateNotificationList();
+            }
+            
+            // Navigate to orders if there's an orderId
+            if (orderId) {
+                window.location.href = 'orders.html';
+            }
+        }
+        
+        async function markAllNotificationsRead() {
+            await NotificationService.markAllAsRead();
+            notifications.forEach(n => n.read = true);
+            updateNotificationBadge();
+            updateNotificationList();
+            Utils.showToast('All notifications marked as read', 'success');
+        }
+        
+        // Close dropdown when clicking outside
+        document.addEventListener('click', function(e) {
+            const wrapper = document.querySelector('.notification-wrapper');
+            const dropdown = document.getElementById('notificationDropdown');
+            if (wrapper && dropdown && !wrapper.contains(e.target)) {
+                dropdown.style.display = 'none';
+            }
+        });
+        
+        async function loadDashboardData() {
+            try {
+                const token = localStorage.getItem('token');
+                
+                // Load orders
+                const ordersRes = await fetch(`${API_CONFIG.BASE_URL}/orders/pharmacy-orders`, {
+                    headers: { 'Authorization': `Bearer ${token}` }
+                });
+                
+                if (ordersRes.ok) {
+                    const ordersData = await ordersRes.json();
+                    allOrders = ordersData.data || [];
+                    updateDashboardStats();
+                    displayRecentOrders();
+                }
+                
+                // Load medicines
+                const medsRes = await fetch(`${API_CONFIG.BASE_URL}/medicines`, {
+                    headers: { 'Authorization': `Bearer ${token}` }
+                });
+                
+                if (medsRes.ok) {
+                    const medsData = await medsRes.json();
+                    const medicines = medsData.data?.medicines || [];
+                    document.getElementById('totalMedicines').textContent = medicines.length;
+                    displayLowStockAlerts(medicines);
+                }
+            } catch (error) {
+                console.error('Error loading dashboard:', error);
+            }
+        }
+        
+        function updateDashboardStats() {
+            const today = new Date();
+            today.setHours(0, 0, 0, 0);
+            
+            const pendingCount = allOrders.filter(o => o.status === 'pending').length;
+            const todayOrders = allOrders.filter(o => new Date(o.createdAt) >= today);
+            const todayRevenue = todayOrders.reduce((sum, o) => sum + (o.totalAmount || o.total || 0), 0);
+            
+            document.getElementById('pendingOrders').textContent = pendingCount;
+            document.getElementById('ordersToday').textContent = todayOrders.length;
+            document.getElementById('revenueToday').textContent = `₹${todayRevenue.toFixed(0)}`;
+        }
+        
+        function displayRecentOrders() {
+            const tbody = document.getElementById('recentOrdersTable');
+            const recentOrders = allOrders.slice(0, 5);
+            
+            if (recentOrders.length === 0) {
+                tbody.innerHTML = `
+                    <tr>
+                        <td colspan="6" style="text-align: center; padding: 40px; color: var(--text-secondary);">
+                            <i class="fas fa-shopping-bag" style="font-size: 3rem; opacity: 0.3; display: block; margin-bottom: 15px;"></i>
+                            No recent orders found
+                        </td>
+                    </tr>
+                `;
+                return;
+            }
+            
+            tbody.innerHTML = recentOrders.map(order => {
+                const items = order.items?.map(i => i.medicine?.name || i.name || 'Item').join(', ') || 'Medicines';
+                const customer = order.user || order.customer || {};
+                
+                return `
+                    <tr>
+                        <td><strong>#${order.orderNumber || order._id?.slice(-6).toUpperCase()}</strong></td>
+                        <td>${customer.name || 'Customer'}</td>
+                        <td>${items.length > 25 ? items.substring(0, 25) + '...' : items}</td>
+                        <td><strong>₹${order.totalAmount || order.total || 0}</strong></td>
+                        <td><span class="badge badge-${getStatusColor(order.status)}">${getStatusText(order.status)}</span></td>
+                        <td>
+                            ${order.status === 'pending' ? `
+                                <button class="btn-primary" style="padding: 5px 12px; font-size: 12px;" onclick="acceptOrder('${order._id}')">
+                                    <i class="fas fa-check"></i> Accept
+                                </button>
+                            ` : '-'}
+                        </td>
+                    </tr>
+                `;
+            }).join('');
+        }
+        
+        function displayLowStockAlerts(medicines) {
+            const container = document.getElementById('lowStockContainer');
+            const lowStock = medicines.filter(m => (m.stock || 0) <= 20 && (m.stock || 0) > 0);
+            const outOfStock = medicines.filter(m => (m.stock || 0) === 0);
+            
+            if (lowStock.length === 0 && outOfStock.length === 0) {
+                container.innerHTML = `
+                    <div style="text-align: center; padding: 40px; color: var(--text-secondary);">
+                        <i class="fas fa-check-circle" style="font-size: 3rem; color: var(--success-color); opacity: 0.5; display: block; margin-bottom: 15px;"></i>
+                        <p>All medicines are well stocked</p>
+                    </div>
+                `;
+                return;
+            }
+            
+            const alerts = [...outOfStock.map(m => ({...m, alertType: 'danger'})), ...lowStock.map(m => ({...m, alertType: 'warning'}))];
+            
+            container.innerHTML = `
+                <div style="display: grid; gap: 10px;">
+                    ${alerts.slice(0, 5).map(m => `
+                        <div style="display: flex; justify-content: space-between; align-items: center; padding: 12px 15px; background: ${m.alertType === 'danger' ? '#fee2e2' : '#fef3c7'}; border-radius: 8px;">
+                            <div>
+                                <strong>${m.name}</strong>
+                                <div style="font-size: 0.85rem; color: ${m.alertType === 'danger' ? '#dc2626' : '#d97706'};">
+                                    ${m.stock === 0 ? 'Out of Stock!' : `Only ${m.stock} left`}
+                                </div>
+                            </div>
+                            <a href="stock.html" class="btn-outline" style="padding: 5px 12px; font-size: 12px;">Update</a>
+                        </div>
+                    `).join('')}
+                </div>
+            `;
+        }
+        
+        async function acceptOrder(orderId) {
+            try {
+                const token = localStorage.getItem('token');
+                const response = await fetch(`${API_CONFIG.BASE_URL}/orders/${orderId}/status`, {
+                    method: 'PUT',
+                    headers: { 
+                        'Content-Type': 'application/json',
+                        'Authorization': `Bearer ${token}` 
+                    },
+                    body: JSON.stringify({ status: 'processing' })
+                });
+                
+                if (response.ok) {
+                    Utils.showToast('Order accepted!', 'success');
+                    loadDashboardData();
+                } else {
+                    Utils.showToast('Failed to accept order', 'error');
+                }
+            } catch (error) {
+                Utils.showToast('Error accepting order', 'error');
+            }
+        }
+        
+        function getStatusText(status) {
+            const map = { 'pending': 'Pending', 'processing': 'Processing', 'packed': 'Packed', 'in_transit': 'In Transit', 'delivered': 'Delivered', 'cancelled': 'Cancelled' };
+            return map[status] || status;
+        }
+        
+        function getStatusColor(status) {
+            const map = { 'pending': 'warning', 'processing': 'info', 'packed': 'info', 'in_transit': 'primary', 'delivered': 'success', 'cancelled': 'danger' };
+            return map[status] || 'secondary';
+        }
+        
+        // Auto-refresh every 30 seconds
+        setInterval(() => {
+            if (document.visibilityState === 'visible') {
+                loadDashboardData();
+            }
+        }, 30000);
+    </script>
+    <script>
+        // Logout functionality
+        document.getElementById('logoutBtn').addEventListener('click', function() {
+            if (confirm('Are you sure you want to logout?')) {
+                Auth.logout();
+                window.location.href = 'login.html';
+            }
+        });
+    </script>
+</body>
+
+</html>
