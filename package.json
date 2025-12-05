@@ -1,0 +1,48 @@
+{
+  "name": "medassistnow-backend",
+  "version": "1.0.0",
+  "description": "Real-Time Medicine Availability & Delivery System - Backend",
+  "main": "src/server.js",
+  "scripts": {
+    "start": "node src/server.js",
+    "dev": "nodemon src/server.js",
+    "worker": "node src/workers/queue.worker.js",
+    "worker:old": "node src/workers/sample.worker.js",
+    "reset:queues": "node reset-rabbitmq-queues.js",
+    "seed": "node seed-medicines.js",
+    "index:es": "node index-medicines-to-elasticsearch.js",
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "test:queue": "node test-queue-pubsub.js"
+  },
+  "keywords": [
+    "medicine",
+    "delivery",
+    "healthcare",
+    "real-time"
+  ],
+  "author": "",
+  "license": "ISC",
+  "dependencies": {
+    "@elastic/elasticsearch": "^8.19.1",
+    "amqplib": "^0.10.9",
+    "axios": "^1.6.2",
+    "bcryptjs": "^3.0.3",
+    "cors": "^2.8.5",
+    "dotenv": "^16.3.1",
+    "express": "^4.18.2",
+    "express-validator": "^7.0.1",
+    "helmet": "^7.1.0",
+    "jsonwebtoken": "^9.0.2",
+    "mongoose": "^8.0.3",
+    "morgan": "^1.10.0",
+    "multer": "^2.0.2",
+    "prom-client": "^15.1.3",
+    "redis": "^5.9.0",
+    "socket.io": "^4.8.1",
+    "tesseract.js": "^6.0.1",
+    "winston": "^3.18.3"
+  },
+  "devDependencies": {
+    "nodemon": "^3.0.2"
+  }
+}

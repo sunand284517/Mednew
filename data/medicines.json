@@ -1,0 +1,92 @@
+[
+  {
+    "name": "Paracetamol 500mg",
+    "description": "Pain reliever and fever reducer. Used for headaches, muscle aches, arthritis, backache, toothaches, colds, and fevers.",
+    "category": "over_the_counter",
+    "price": 50
+  },
+  {
+    "name": "Paracetamol 650mg",
+    "description": "Higher strength paracetamol for moderate to severe pain and high fever.",
+    "category": "over_the_counter",
+    "price": 75
+  },
+  {
+    "name": "Aspirin 75mg",
+    "description": "Blood thinner and pain reliever. Used to prevent heart attacks and strokes.",
+    "category": "prescription",
+    "price": 120
+  },
+  {
+    "name": "Ibuprofen 400mg",
+    "description": "Nonsteroidal anti-inflammatory drug (NSAID) for pain, fever, and inflammation.",
+    "category": "over_the_counter",
+    "price": 80
+  },
+  {
+    "name": "Amoxicillin 500mg",
+    "description": "Antibiotic used to treat bacterial infections.",
+    "category": "prescription",
+    "price": 150
+  },
+  {
+    "name": "Cetirizine 10mg",
+    "description": "Antihistamine for allergy relief. Treats hay fever, hives, and itching.",
+    "category": "over_the_counter",
+    "price": 60
+  },
+  {
+    "name": "Omeprazole 20mg",
+    "description": "Proton pump inhibitor for acid reflux and stomach ulcers.",
+    "category": "prescription",
+    "price": 180
+  },
+  {
+    "name": "Vitamin D3 60000 IU",
+    "description": "Vitamin D supplement for bone health and immunity.",
+    "category": "supplement",
+    "price": 40
+  },
+  {
+    "name": "Vitamin C 500mg",
+    "description": "Antioxidant vitamin for immune support and overall health.",
+    "category": "supplement",
+    "price": 30
+  },
+  {
+    "name": "Azithromycin 500mg",
+    "description": "Antibiotic for respiratory and ear infections.",
+    "category": "prescription",
+    "price": 200
+  },
+  {
+    "name": "Metformin 500mg",
+    "description": "Diabetes medication to control blood sugar levels.",
+    "category": "prescription",
+    "price": 90
+  },
+  {
+    "name": "Dolo 650mg",
+    "description": "Popular brand of paracetamol for fever and pain relief.",
+    "category": "over_the_counter",
+    "price": 65
+  },
+  {
+    "name": "Crocin Advance",
+    "description": "Fast-acting paracetamol with Optizorb technology.",
+    "category": "over_the_counter",
+    "price": 55
+  },
+  {
+    "name": "Calpol 500mg Suspension",
+    "description": "Paracetamol syrup for children. Fever and pain relief.",
+    "category": "over_the_counter",
+    "price": 85
+  },
+  {
+    "name": "Disprin",
+    "description": "Soluble aspirin for quick relief from headaches and body aches.",
+    "category": "over_the_counter",
+    "price": 45
+  }
+]
