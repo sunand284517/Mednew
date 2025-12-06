@@ -1,4 +1,4 @@
-/**
+/*
  * MedAssist Now - Backend Server
  * Real-Time Medicine Availability & Delivery System
  * College Project - 50 Marks

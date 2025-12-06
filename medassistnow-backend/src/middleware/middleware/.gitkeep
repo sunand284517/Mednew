@@ -1,0 +1,4 @@
+# Middleware Directory
+# Custom middleware functions will be placed here
+# Example: auth.middleware.js, validation.middleware.js, errorHandler.middleware.js
+# Note: Authentication middleware will be added later
