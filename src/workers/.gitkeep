@@ -1,4 +1,0 @@
-# Workers Directory
-# Background job workers (Celery/RabbitMQ) will be placed here
-# Example: order.worker.js, notification.worker.js, stock.worker.js
-# Note: RabbitMQ workers will be added later

@@ -1,4 +1,4 @@
-/*
+/**
  * Metrics Controller
  * Expose Prometheus metrics endpoint
  */
@@ -24,6 +24,6 @@ const getMetrics = async (req, res) => {
   }
 };
 
-
-
-};  getMetricsnmodule.exports = {
+module.exports = {
+  getMetrics
+};

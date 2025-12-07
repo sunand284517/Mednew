@@ -28,16 +28,15 @@ const authMiddleware = async (req, res, next) => {
     req.user = decoded;
     
     next();
-    
+  } catch (error) {
+    if (error.name === 'JsonWebTokenError') {
+      return errorResponse(res, 'Invalid token', 401);
+    }
+    if (error.name === 'TokenExpiredError') {
+      return errorResponse(res, 'Token expired', 401);
+    }
+    return errorResponse(res, 'Authentication failed', 401);
+  }
+};
 
-
-
-
-
-
-
-
-
-
-
-nmodule.exports = authMiddleware;};  }    return errorResponse(res, 'Authentication failed', 401);    }      return errorResponse(res, 'Token expired', 401);    if (error.name === 'TokenExpiredError') {    }      return errorResponse(res, 'Invalid token', 401);    if (error.name === 'JsonWebTokenError') {n  } catch (error) {
+module.exports = authMiddleware;

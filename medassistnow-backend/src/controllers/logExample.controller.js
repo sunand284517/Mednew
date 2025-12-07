@@ -1,4 +1,4 @@
-/*
+/**
  * Log Example Controller
  * Demonstrate different log levels
  */
@@ -22,6 +22,6 @@ const test = (req, res) => {
   });
 };
 
-
-
-};  testnmodule.exports = {
+module.exports = {
+  test
+};

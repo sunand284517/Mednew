@@ -24,20 +24,29 @@ const AuthService = {
    */
   async login(credentials) {
     try {
-      const response = await API.post(API_CONFIG.ENDPOINTS.LOGIN, credentials);
+      console.log('AuthService.login - Sending credentials to:', `${API_CONFIG.BASE_URL}${API_CONFIG.ENDPOINTS.LOGIN}`);
+      console.log('AuthService.login - Credentials:', { email: credentials.email, passwordLength: credentials.password ? credentials.password.length : 0 });
       
-      if (response.success && response.data.token) {
+      const response = await API.post(API_CONFIG.ENDPOINTS.LOGIN, credentials);
+      console.log('AuthService.login - Raw response:', response);
+      
+      if (response.success && response.data && response.data.token) {
         // Only store JWT token - user data will be fetched from backend
         Auth.saveToken(response.data.token);
+        console.log('AuthService.login - Token saved successfully');
         
         // Cache user for immediate display (optional)
         if (response.data.user) {
           Auth.cacheUser(response.data.user);
+          console.log('AuthService.login - User cached:', response.data.user);
         }
+      } else {
+        console.warn('AuthService.login - Response missing success or token:', response);
       }
       
       return response;
     } catch (error) {
+      console.error('AuthService.login - Error caught:', error);
       throw new Error(error.message || 'Login failed');
     }
   },

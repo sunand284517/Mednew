@@ -3,7 +3,7 @@
  * Track HTTP requests for Prometheus
  */
 
-const { httpRequestCounter, httpRequestDuration } = require('../config/prometheus');
+const { httpRequestCounter, httpRequestDuration } = require('../../config/prometheus');
 
 /**
  * Middleware to collect metrics for each HTTP request

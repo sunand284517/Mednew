@@ -1,4 +1,4 @@
-/*
+/**
  * Inventory Controller
  * Handle pharmacy inventory operations
  */
@@ -156,11 +156,11 @@ const getAllInventory = async (req, res, next) => {
   }
 };
 
-
-
-
-
-
-
-
-};  getAllInventory  updateInventoryByMedicine,  deleteInventory,  updateInventory,  getInventoryByPharmacy,  addInventory,nmodule.exports = {
+module.exports = {
+  addInventory,
+  getInventoryByPharmacy,
+  updateInventory,
+  deleteInventory,
+  updateInventoryByMedicine,
+  getAllInventory
+};

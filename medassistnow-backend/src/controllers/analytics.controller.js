@@ -51,17 +51,22 @@ exports.getTopMedicines = async (req, res) => {
           totalQuantity: 1,
           totalRevenue: { $round: ['$totalRevenue', 2] },
           orderCount: 1,
-          avgPrice: { $round: ['$avgPrice', 2] },
-          rank: { $rank: {} }
+          avgPrice: { $round: ['$avgPrice', 2] }
         }
       }
     ]);
 
+    // Add rank manually
+    const rankedMedicines = topMedicines.map((med, index) => ({
+      ...med,
+      rank: index + 1
+    }));
+
     res.status(200).json({
       success: true,
       message: 'Top medicines retrieved successfully',
-      data: topMedicines,
-      count: topMedicines.length,
+      data: rankedMedicines,
+      count: rankedMedicines.length,
       timeRange
     });
   } catch (error) {

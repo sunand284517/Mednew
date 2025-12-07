@@ -30,6 +30,7 @@ const pubsubRoutes = require('./pubsub.routes');
 const prescriptionRoutes = require('./prescription.routes');
 const notificationRoutes = require('./notification.routes');
 const analyticsRoutes = require('./analytics.routes');
+const deliveryAnalyticsRoutes = require('./delivery-analytics.routes');
 
 // ========================================
 // API Routes Configuration
@@ -89,6 +90,7 @@ router.use('/deliveries', deliveryRoutes); // Alias for delivery history
 router.use('/prescriptions', prescriptionRoutes);
 router.use('/notifications', notificationRoutes);
 router.use('/analytics', analyticsRoutes);
+router.use('/delivery-analytics', deliveryAnalyticsRoutes);
 
 // New Queue and Pub/Sub routes
 router.use('/queue', queueRoutes);

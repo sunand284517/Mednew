@@ -13,7 +13,7 @@
     <!-- Auth check with backend JWT verification -->
     <script src="../js/config.js"></script>
     <script>
-        // Enhanced authentication check with better error handling
+        // Authentication check with better error handling
         (function() {
             // Add loading indicator
             document.body.style.opacity = '0.5';
@@ -21,6 +21,7 @@
             
             const token = localStorage.getItem('token');
             const userRole = sessionStorage.getItem('userRole');
+            const cachedUser = localStorage.getItem('user');
             
             // If we have a role in session storage and a token, proceed
             if (token && userRole === 'user') {
@@ -33,7 +34,7 @@
             // If no token, redirect to login
             if (!token) {
                 console.log('No authentication token found, redirecting to login');
-                window.location.href = 'login.html';
+                window.location.replace('login.html');
                 return;
             }
 
@@ -45,17 +46,21 @@
                     'Authorization': `Bearer ${token}`,
                     'Content-Type': 'application/json'
                 },
-                credentials: 'same-origin'
+                credentials: 'include'
             })
             .then(response => {
+                console.log('Auth response status:', response.status);
                 if (!response.ok) {
                     throw new Error('Authentication failed: ' + response.status);
                 }
                 return response.json();
             })
             .then(data => {
+                console.log('Auth response data:', data);
+                
+                // Check response structure - it should be { success, message, data: { user: {...} } }
                 if (!data || !data.data || !data.data.user) {
-                    throw new Error('Invalid user data received');
+                    throw new Error('Invalid user data received. Expected data.user in response');
                 }
                 
                 const user = data.data.user;
@@ -66,24 +71,31 @@
                 
                 // Check role
                 if (user.role !== 'user') {
-                    console.log('Insufficient permissions, redirecting to login');
-                    throw new Error('Insufficient permissions');
+                    console.log('Insufficient permissions, user role is:', user.role);
+                    throw new Error('Insufficient permissions for user dashboard');
                 }
                 
                 // If we got here, authentication is successful
                 document.body.style.opacity = '1';
                 document.body.style.pointerEvents = 'auto';
-                console.log('Authentication successful, showing dashboard');
+                console.log('✅ Authentication successful, showing dashboard');
                 
                 // Cache user for page display
                 localStorage.setItem('user', JSON.stringify(user));
                 localStorage.setItem('userCache', JSON.stringify(user));
             })
             .catch(error => {
-                console.error('Authentication error:', error);
-                sessionStorage.setItem('authJustFailed', 'true');
-                localStorage.clear();
-                window.location.replace('login.html');
+                console.error('❌ Authentication error:', error.message);
+                console.log('Error details:', error);
+                // Prevent infinite redirect loop by clearing everything
+                sessionStorage.removeItem('userRole');
+                localStorage.removeItem('userCache');
+                localStorage.removeItem('token');
+                localStorage.removeItem('user');
+                document.body.style.opacity = '1';
+                document.body.style.pointerEvents = 'auto';
+                console.log('Redirecting to login for fresh authentication');
+                window.location.replace('login.html?redirected=true');
             });
         })();
     </script>
@@ -291,7 +303,7 @@
         </div>
     </div>
     
-    <!-- API Integration Scripts -->
+    <!-- API Integration Scripts (config.js already loaded above) -->
     <script src="../js/auth.js"></script>
     <script src="../js/api.js"></script>
     <script src="../js/utils.js"></script>

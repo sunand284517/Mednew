@@ -1,4 +1,4 @@
-/*
+/**
  * Auth Controller
  * Handles user authentication (login, register)
  */
@@ -39,98 +39,98 @@ const register = async (req, res) => {
       address
     });
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-};  getMe  login,  register,
-nmodule.exports = {};  }    return errorResponse(res, error.message || 'Failed to get user', 500);    console.error('GetMe error:', error);
-n  } catch (error) {
-n    return successResponse(res, 'User retrieved successfully', { user });    }      return errorResponse(res, 'User not found', 404);    if (!user) {        const user = await User.findById(req.user.id).select('-password');    // req.user is set by auth middleware  try {const getMe = async (req, res) => { */ * GET /api/auth/me * Get current user/**};  }    return errorResponse(res, error.message || 'Login failed', 500);    console.error('Login error:', error);  } catch (error) {    });      user: userData      token,    return successResponse(res, 'Login successful', {    delete userData.password;    const userData = user.toObject();    // Return response without password    });      role: user.role      email: user.email,      id: user._id,    const token = generateToken({    // Generate token    }      return errorResponse(res, 'Invalid email or password', 401);    if (!isMatch) {    const isMatch = await comparePassword(password, user.password);    // Compare password    }      return errorResponse(res, 'Invalid email or password', 401);    if (!user) {    const user = await User.findOne({ email: email.toLowerCase() });    // Find user by email    }      return errorResponse(res, 'Email and password are required', 400);    if (!email || !password) {    // Validate required fields    const { email, password } = req.body;  try {const login = async (req, res) => { */ * POST /api/auth/login * Login user/**};  }    return errorResponse(res, error.message || 'Registration failed', 500);    console.error('Register error:', error);
-n  } catch (error) {    }, 201);      user: userData      token,
-n    return successResponse(res, 'User registered successfully', {    delete userData.password;    const userData = user.toObject();
-n    // Return response without password    });      role: user.role      email: user.email,      id: user._id,    const token = generateToken({n    // Generate token
+    // Generate token
+    const token = generateToken({
+      id: user._id,
+      email: user.email,
+      role: user.role
+    });
+
+    // Return response without password
+    const userData = user.toObject();
+    delete userData.password;
+
+    return successResponse(res, 'User registered successfully', {
+      token,
+      user: userData
+    }, 201);
+
+  } catch (error) {
+    console.error('Register error:', error);
+    return errorResponse(res, error.message || 'Registration failed', 500);
+  }
+};
+
+/**
+ * Login user
+ * POST /api/auth/login
+ */
+const login = async (req, res) => {
+  try {
+    const { email, password } = req.body;
+
+    // Validate required fields
+    if (!email || !password) {
+      return errorResponse(res, 'Email and password are required', 400);
+    }
+
+    // Find user by email
+    const user = await User.findOne({ email: email.toLowerCase() });
+    if (!user) {
+      return errorResponse(res, 'Invalid email or password', 401);
+    }
+
+    // Compare password
+    const isMatch = await comparePassword(password, user.password);
+    if (!isMatch) {
+      return errorResponse(res, 'Invalid email or password', 401);
+    }
+
+    // Generate token
+    const token = generateToken({
+      id: user._id,
+      email: user.email,
+      role: user.role
+    });
+
+    // Return response without password
+    const userData = user.toObject();
+    delete userData.password;
+
+    return successResponse(res, 'Login successful', {
+      token,
+      user: userData
+    });
+
+  } catch (error) {
+    console.error('Login error:', error);
+    return errorResponse(res, error.message || 'Login failed', 500);
+  }
+};
+
+/**
+ * Get current user
+ * GET /api/auth/me
+ */
+const getMe = async (req, res) => {
+  try {
+    // req.user is set by auth middleware
+    const user = await User.findById(req.user.id).select('-password');
+    
+    if (!user) {
+      return errorResponse(res, 'User not found', 404);
+    }
+
+    return successResponse(res, 'User retrieved successfully', { user });
+
+  } catch (error) {
+    console.error('GetMe error:', error);
+    return errorResponse(res, error.message || 'Failed to get user', 500);
+  }
+};
+
+module.exports = {
+  register,
+  login,
+  getMe
+};

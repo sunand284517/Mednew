@@ -1,4 +1,4 @@
-/*
+/**
  * RabbitMQ Configuration
  * Message queue setup for background tasks
  */
@@ -23,54 +23,54 @@ const connectRabbitMQ = async () => {
     channel = await connection.createChannel();
     console.log('📡 RabbitMQ Channel created');
 
+    // Handle connection events
+    connection.on('error', (err) => {
+      console.error('❌ RabbitMQ connection error:', err.message);
+    });
 
+    connection.on('close', () => {
+      console.warn('⚠️  RabbitMQ connection closed');
+    });
 
+    return { connection, channel };
+  } catch (error) {
+    console.error('❌ RabbitMQ connection failed:', error.message);
+    throw error;
+  }
+};
 
+/**
+ * Get the RabbitMQ channel
+ * @returns {Channel} RabbitMQ channel
+ */
+const getChannel = () => {
+  if (!channel) {
+    throw new Error('RabbitMQ channel not initialized. Call connectRabbitMQ() first.');
+  }
+  return channel;
+};
 
+/**
+ * Close RabbitMQ connection
+ */
+const disconnectRabbitMQ = async () => {
+  try {
+    if (channel) {
+      await channel.close();
+      console.log('✅ RabbitMQ channel closed');
+    }
+    if (connection) {
+      await connection.close();
+      console.log('✅ RabbitMQ disconnected successfully');
+    }
+  } catch (error) {
+    console.error('❌ RabbitMQ disconnect error:', error.message);
+    throw error;
+  }
+};
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-};  disconnectRabbitMQ  getChannel,  connectRabbitMQ,
-nmodule.exports = {};  }    throw error;    console.error('❌ RabbitMQ disconnect error:', error.message);  } catch (error) {    }      console.log('✅ RabbitMQ disconnected successfully');      await connection.close();    if (connection) {    }      console.log('✅ RabbitMQ channel closed');      await channel.close();    if (channel) {  try {const disconnectRabbitMQ = async () => { */ * Close RabbitMQ connection/**};  return channel;  }    throw new Error('RabbitMQ channel not initialized. Call connectRabbitMQ() first.');  if (!channel) {const getChannel = () => { */ * @returns {Channel} RabbitMQ channel * Get the RabbitMQ channel/**};  }    throw error;    console.error('❌ RabbitMQ connection failed:', error.message);  } catch (error) {
-n    return { connection, channel };    });      console.warn('⚠️  RabbitMQ connection closed');
-n    connection.on('close', () => {    });      console.error('❌ RabbitMQ connection error:', err.message);    connection.on('error', (err) => {n    // Handle connection events
+module.exports = {
+  connectRabbitMQ,
+  getChannel,
+  disconnectRabbitMQ
+};

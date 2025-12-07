@@ -7,17 +7,20 @@ document.addEventListener('DOMContentLoaded', async function () {
   console.log('Login page loaded');
   
   // Prevent redirect loop - check if we just came from a failed auth
-  const justFailed = sessionStorage.getItem('authJustFailed');
-  if (justFailed) {
+  const redirected = new URLSearchParams(window.location.search).get('redirected');
+  const forceLogin = new URLSearchParams(window.location.search).get('force');
+  
+  if (redirected === 'true') {
     console.log('Cleared invalid session, ready for fresh login');
-    sessionStorage.removeItem('authJustFailed');
     Auth.removeToken();
-    localStorage.clear();
+    sessionStorage.clear();
+    // Clear the URL parameter
+    window.history.replaceState({}, document.title, 'login.html');
     return;
   }
   
-  // Check if already logged in
-  if (Auth.isAuthenticated()) {
+  // Check if already logged in (unless force=true is passed)
+  if (Auth.isAuthenticated() && forceLogin !== 'true') {
     console.log('Token found, checking if valid...');
     try {
       const user = await Auth.fetchUser();
@@ -32,9 +35,10 @@ document.addEventListener('DOMContentLoaded', async function () {
       // Token invalid, let user login again
       Auth.removeToken();
       localStorage.clear();
+      sessionStorage.clear();
     }
   } else {
-    console.log('No token found, ready for login');
+    console.log('No token found or forced login, ready for login form');
   }
 
   // Handle login form submission
@@ -110,15 +114,16 @@ async function handleLogin(e) {
 function redirectToDashboard(role) {
   switch(role) {
     case 'admin':
-      window.location.href = '../admin/dashboard.html';
+      window.location.replace('../admin/dashboard.html');
       break;
     case 'pharmacy':
-      window.location.href = '../pharmacy/dashboard.html';
+      window.location.replace('../pharmacy/dashboard.html');
       break;
     case 'delivery':
-      window.location.href = '../delivery/dashboard.html';
+      window.location.replace('../delivery/dashboard.html');
       break;
     default:
-      window.location.href = 'dashboard.html';
+      window.location.replace('dashboard.html');
   }
 }
+

@@ -6,10 +6,10 @@
 const express = require('express');
 const router = express.Router();
 const analyticsController = require('../controllers/analytics.controller');
-const { authenticateToken, adminOnly } = require('../middleware/auth');
+const authMiddleware = require('../middleware/auth.middleware');
 
 // All analytics endpoints require admin authentication
-router.use(authenticateToken, adminOnly);
+router.use(authMiddleware);
 
 // Top selling medicines
 router.get('/medicines/top-selling', analyticsController.getTopMedicines);

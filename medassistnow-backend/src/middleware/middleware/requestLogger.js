@@ -3,7 +3,7 @@
  * Log all incoming HTTP requests with response time
  */
 
-const logger = require('../utils/logger');
+const logger = require('../../utils/logger');
 
 /**
  * Middleware to log HTTP requests

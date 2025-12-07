@@ -1,37 +1,37 @@
-/*
+/**
  * Prometheus Configuration
  * Setup metrics collection for monitoring
  */
 
 const client = require('prom-client');
 
+// Create a Registry to register metrics
+const prometheusRegistry = new client.Registry();
 
+// Collect default metrics (CPU, memory, event loop lag)
+client.collectDefaultMetrics({ 
+  register: prometheusRegistry,
+  prefix: 'medassist_'
+});
 
+// Custom metric: HTTP request counter
+const httpRequestCounter = new client.Counter({
+  name: 'medassist_http_requests_total',
+  help: 'Total number of HTTP requests',
+  labelNames: ['method', 'route', 'status_code'],
+  registers: [prometheusRegistry]
+});
 
+// Custom metric: HTTP request duration
+const httpRequestDuration = new client.Histogram({
+  name: 'medassist_http_request_duration_seconds',
+  help: 'Duration of HTTP requests in seconds',
+  labelNames: ['method', 'route', 'status_code'],
+  registers: [prometheusRegistry]
+});
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-};  httpRequestDuration  httpRequestCounter,  prometheusRegistry,
-nmodule.exports = {});  registers: [prometheusRegistry]  labelNames: ['method', 'route', 'status_code'],  help: 'Duration of HTTP requests in seconds',  name: 'medassist_http_request_duration_seconds',const httpRequestDuration = new client.Histogram({
-n// Custom metric: HTTP request duration});  registers: [prometheusRegistry]  labelNames: ['method', 'route', 'status_code'],  help: 'Total number of HTTP requests',  name: 'medassist_http_requests_total',const httpRequestCounter = new client.Counter({// Custom metric: HTTP request counter});  prefix: 'medassist_'  register: prometheusRegistry,client.collectDefaultMetrics({ // Collect default metrics (CPU, memory, event loop lag)const prometheusRegistry = new client.Registry();n// Create a Registry to register metrics
+module.exports = {
+  prometheusRegistry,
+  httpRequestCounter,
+  httpRequestDuration
+};

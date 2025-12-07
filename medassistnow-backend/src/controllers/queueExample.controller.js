@@ -1,4 +1,4 @@
-/*
+/**
  * Queue Example Controller
  * Demonstrates sending messages to RabbitMQ queue
  */

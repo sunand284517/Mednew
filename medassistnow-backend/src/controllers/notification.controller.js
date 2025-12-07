@@ -1,4 +1,4 @@
-/*
+/**
  * Notification Controller
  * Handle notification CRUD operations
  */
@@ -179,11 +179,11 @@ const getUnreadCount = async (req, res) => {
   }
 };
 
-
-
-
-
-
-
-
-};  getUnreadCount  clearAllNotifications,  deleteNotification,  markAllAsRead,  markAsRead,  getNotifications,nmodule.exports = {
+module.exports = {
+  getNotifications,
+  markAsRead,
+  markAllAsRead,
+  deleteNotification,
+  clearAllNotifications,
+  getUnreadCount
+};

@@ -490,6 +490,7 @@
 <body data-required-role="user">
     <script src="../js/config.js"></script>
     <script>
+        // ✅ config.js is loaded, do NOT load it again below
         (async function() {
             const token = localStorage.getItem('token');
             if (!token) {
@@ -652,8 +653,7 @@
         </div>
     </div>
     
-    <!-- API Integration Scripts -->
-    <script src="../js/config.js"></script>
+    <!-- API Integration Scripts (config.js already loaded above) -->
     <script src="../js/auth.js"></script>
     <script src="../js/api.js"></script>
     <script src="../js/utils.js"></script>

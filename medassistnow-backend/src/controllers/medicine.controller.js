@@ -1,4 +1,4 @@
-/*
+/**
  * Medicine Controller
  * Handles medicine CRUD operations
  */
@@ -57,142 +57,142 @@ const getMedicines = async (req, res) => {
       ];
     }
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-};  deleteMedicine  updateMedicine,  getMedicineById,  getMedicines,  createMedicine,
-nmodule.exports = {};  }    return errorResponse(res, error.message || 'Failed to delete medicine', 500);    console.error('Delete medicine error:', error);  } catch (error) {
-n    return successResponse(res, 'Medicine deleted successfully');    }      return errorResponse(res, 'Medicine not found', 404);    if (!medicine) {        const medicine = await Medicine.findByIdAndDelete(req.params.id);  try {const deleteMedicine = async (req, res) => { */ * DELETE /api/medicines/:id * Delete medicine/**};  }    return errorResponse(res, error.message || 'Failed to update medicine', 500);    console.error('Update medicine error:', error);  } catch (error) {
-n    return successResponse(res, 'Medicine updated successfully', { medicine });    }      return errorResponse(res, 'Medicine not found', 404);    if (!medicine) {    );      { new: true, runValidators: true }      updateData,      req.params.id,    const medicine = await Medicine.findByIdAndUpdate(    if (expiryDate) updateData.expiryDate = expiryDate;    if (manufacturer) updateData.manufacturer = manufacturer;    if (quantity !== undefined) updateData.stock = quantity; // Support both stock and quantity    if (stock !== undefined) updateData.stock = stock;    if (price !== undefined) updateData.price = price;    if (category) updateData.category = category;    if (description) updateData.description = description;    if (name) updateData.name = name;    const updateData = {};    // Build update object    const { name, description, category, price, stock, manufacturer, expiryDate, quantity } = req.body;  try {const updateMedicine = async (req, res) => { */ * PUT /api/medicines/:id * Update medicine/**};  }    return errorResponse(res, error.message || 'Failed to get medicine', 500);    console.error('Get medicine error:', error);  } catch (error) {
-n    return successResponse(res, 'Medicine retrieved successfully', { medicine });    }      return errorResponse(res, 'Medicine not found', 404);    if (!medicine) {        const medicine = await Medicine.findById(req.params.id).populate('pharmacyId', 'name email pharmacyName');  try {const getMedicineById = async (req, res) => { */ * GET /api/medicines/:id * Get medicine by ID/**};  }    return errorResponse(res, error.message || 'Failed to get medicines', 500);    console.error('Get medicines error:', error);  } catch (error) {    return successResponse(res, 'Medicines retrieved successfully', { medicines: medicinesWithAvailability });        }));      };        price: availableAt.length > 0 ? availableAt[0].price : medicine.price        stock: totalStock,        availableAt,        ...medicine,      return {            const totalStock = availableAt.reduce((sum, item) => sum + item.stock, 0);      // Calculate total stock across all pharmacies            }));        };          location: pharmacyLocation          stock: item.quantity || 0,          price: item.price || medicine.price,          pharmacy: pharmacyName,          pharmacyId: item.pharmacyId,        return {                }          }            pharmacyLocation = pharmacyUser.address || '';            pharmacyName = pharmacyUser.pharmacyName || pharmacyUser.name;          if (pharmacyUser) {          const pharmacyUser = await User.findById(item.pharmacyId).lean();          // Fallback: Check User collection for pharmacy users        } else {          pharmacyLocation = pharmacy.location || pharmacy.address || '';          pharmacyName = pharmacy.pharmacyName || pharmacy.name;        if (pharmacy) {        const pharmacy = await Pharmacy.findById(item.pharmacyId).lean();        // First try to find in Pharmacy collection                let pharmacyLocation = '';        let pharmacyName = 'Unknown Pharmacy';        let pharmacyInfo = null;      const availableAt = await Promise.all(inventoryItems.map(async (item) => {      // Check both Pharmacy collection and User collection for pharmacy details      // Build availableAt array with pharmacy info            const inventoryItems = await Inventory.find(inventoryQuery).lean();            if (pharmacyId) inventoryQuery.pharmacyId = pharmacyId;      let inventoryQuery = { medicineId: medicine._id };      // Get inventory items for this medicine    const medicinesWithAvailability = await Promise.all(medicines.map(async (medicine) => {    // For each medicine, get inventory and pharmacy info    n    let medicines = await Medicine.find(filter).lean();
+    let medicines = await Medicine.find(filter).lean();
+    
+    // For each medicine, get inventory and pharmacy info
+    const medicinesWithAvailability = await Promise.all(medicines.map(async (medicine) => {
+      // Get inventory items for this medicine
+      let inventoryQuery = { medicineId: medicine._id };
+      if (pharmacyId) inventoryQuery.pharmacyId = pharmacyId;
+      
+      const inventoryItems = await Inventory.find(inventoryQuery).lean();
+      
+      // Build availableAt array with pharmacy info
+      // Check both Pharmacy collection and User collection for pharmacy details
+      const availableAt = await Promise.all(inventoryItems.map(async (item) => {
+        let pharmacyInfo = null;
+        let pharmacyName = 'Unknown Pharmacy';
+        let pharmacyLocation = '';
+        
+        // First try to find in Pharmacy collection
+        const pharmacy = await Pharmacy.findById(item.pharmacyId).lean();
+        if (pharmacy) {
+          pharmacyName = pharmacy.pharmacyName || pharmacy.name;
+          pharmacyLocation = pharmacy.location || pharmacy.address || '';
+        } else {
+          // Fallback: Check User collection for pharmacy users
+          const pharmacyUser = await User.findById(item.pharmacyId).lean();
+          if (pharmacyUser) {
+            pharmacyName = pharmacyUser.pharmacyName || pharmacyUser.name;
+            pharmacyLocation = pharmacyUser.address || '';
+          }
+        }
+        
+        return {
+          pharmacyId: item.pharmacyId,
+          pharmacy: pharmacyName,
+          price: item.price || medicine.price,
+          stock: item.quantity || 0,
+          location: pharmacyLocation
+        };
+      }));
+      
+      // Calculate total stock across all pharmacies
+      const totalStock = availableAt.reduce((sum, item) => sum + item.stock, 0);
+      
+      return {
+        ...medicine,
+        availableAt,
+        stock: totalStock,
+        price: availableAt.length > 0 ? availableAt[0].price : medicine.price
+      };
+    }));
+    
+    return successResponse(res, 'Medicines retrieved successfully', { medicines: medicinesWithAvailability });
+  } catch (error) {
+    console.error('Get medicines error:', error);
+    return errorResponse(res, error.message || 'Failed to get medicines', 500);
+  }
+};
+
+/**
+ * Get medicine by ID
+ * GET /api/medicines/:id
+ */
+const getMedicineById = async (req, res) => {
+  try {
+    const medicine = await Medicine.findById(req.params.id).populate('pharmacyId', 'name email pharmacyName');
+    
+    if (!medicine) {
+      return errorResponse(res, 'Medicine not found', 404);
+    }
+
+    return successResponse(res, 'Medicine retrieved successfully', { medicine });
+  } catch (error) {
+    console.error('Get medicine error:', error);
+    return errorResponse(res, error.message || 'Failed to get medicine', 500);
+  }
+};
+
+/**
+ * Update medicine
+ * PUT /api/medicines/:id
+ */
+const updateMedicine = async (req, res) => {
+  try {
+    const { name, description, category, price, stock, manufacturer, expiryDate, quantity } = req.body;
+
+    // Build update object
+    const updateData = {};
+    if (name) updateData.name = name;
+    if (description) updateData.description = description;
+    if (category) updateData.category = category;
+    if (price !== undefined) updateData.price = price;
+    if (stock !== undefined) updateData.stock = stock;
+    if (quantity !== undefined) updateData.stock = quantity; // Support both stock and quantity
+    if (manufacturer) updateData.manufacturer = manufacturer;
+    if (expiryDate) updateData.expiryDate = expiryDate;
+
+    const medicine = await Medicine.findByIdAndUpdate(
+      req.params.id,
+      updateData,
+      { new: true, runValidators: true }
+    );
+
+    if (!medicine) {
+      return errorResponse(res, 'Medicine not found', 404);
+    }
+
+    return successResponse(res, 'Medicine updated successfully', { medicine });
+  } catch (error) {
+    console.error('Update medicine error:', error);
+    return errorResponse(res, error.message || 'Failed to update medicine', 500);
+  }
+};
+
+/**
+ * Delete medicine
+ * DELETE /api/medicines/:id
+ */
+const deleteMedicine = async (req, res) => {
+  try {
+    const medicine = await Medicine.findByIdAndDelete(req.params.id);
+    
+    if (!medicine) {
+      return errorResponse(res, 'Medicine not found', 404);
+    }
+
+    return successResponse(res, 'Medicine deleted successfully');
+  } catch (error) {
+    console.error('Delete medicine error:', error);
+    return errorResponse(res, error.message || 'Failed to delete medicine', 500);
+  }
+};
+
+module.exports = {
+  createMedicine,
+  getMedicines,
+  getMedicineById,
+  updateMedicine,
+  deleteMedicine
+};

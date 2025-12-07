@@ -1,4 +1,4 @@
-/*
+/**
  * Protected Controller
  * Test controller to verify JWT authentication
  */
@@ -16,6 +16,6 @@ const getProtected = (req, res) => {
   });
 };
 
-
-
-};  getProtectednmodule.exports = {
+module.exports = {
+  getProtected
+};

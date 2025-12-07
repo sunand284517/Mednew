@@ -1,4 +1,4 @@
-/*
+/**
  * Pharmacy Controller
  * Handle pharmacy CRUD operations
  */
@@ -109,10 +109,10 @@ const deletePharmacy = async (req, res, next) => {
   }
 };
 
-
-
-
-
-
-
-};  deletePharmacy  updatePharmacy,  getPharmacyById,  getPharmacies,  createPharmacy,nmodule.exports = {
+module.exports = {
+  createPharmacy,
+  getPharmacies,
+  getPharmacyById,
+  updatePharmacy,
+  deletePharmacy
+};

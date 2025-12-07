@@ -1,4 +1,4 @@
-/*
+/**
  * Search Controller
  * Handle search requests using Elasticsearch
  */
@@ -124,6 +124,6 @@ async function enrichMedicinesWithInventory(medicines) {
   }));
 }
 
-
-
-};  searchMedicinesnmodule.exports = {
+module.exports = {
+  searchMedicines
+};

@@ -1,4 +1,4 @@
-/*
+/**
  * Database Configuration
  * MongoDB connection setup using Mongoose
  */
@@ -16,39 +16,39 @@ const connectDB = async () => {
       // useNewUrlParser and useUnifiedTopology are deprecated
     });
 
+    console.log(`✅ MongoDB Connected: ${conn.connection.host}`);
+    console.log(`📊 Database Name: ${conn.connection.name}`);
+    
+    // Handle connection events
+    mongoose.connection.on('error', (err) => {
+      console.error('❌ MongoDB connection error:', err);
+    });
 
+    mongoose.connection.on('disconnected', () => {
+      console.warn('⚠️  MongoDB disconnected');
+    });
 
+    return conn;
+  } catch (error) {
+    console.error('❌ MongoDB connection failed:', error.message);
+    throw error;
+  }
+};
 
+/**
+ * Disconnect from MongoDB database
+ */
+const disconnectDB = async () => {
+  try {
+    await mongoose.connection.close();
+    console.log('✅ MongoDB disconnected successfully');
+  } catch (error) {
+    console.error('❌ MongoDB disconnect error:', error.message);
+    throw error;
+  }
+};
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-};  disconnectDB  connectDB,
-nmodule.exports = {};  }    throw error;    console.error('❌ MongoDB disconnect error:', error.message);  } catch (error) {    console.log('✅ MongoDB disconnected successfully');    await mongoose.connection.close();  try {const disconnectDB = async () => { */ * Disconnect from MongoDB database/**};  }    throw error;    console.error('❌ MongoDB connection failed:', error.message);  } catch (error) {
-n    return conn;    });      console.warn('⚠️  MongoDB disconnected');
-n    mongoose.connection.on('disconnected', () => {    });      console.error('❌ MongoDB connection error:', err);    mongoose.connection.on('error', (err) => {    // Handle connection events        console.log(`📊 Database Name: ${conn.connection.name}`);n    console.log(`✅ MongoDB Connected: ${conn.connection.host}`);
+module.exports = {
+  connectDB,
+  disconnectDB
+};

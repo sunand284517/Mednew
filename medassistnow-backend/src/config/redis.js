@@ -1,4 +1,4 @@
-/*
+/**
  * Redis Configuration
  * Redis connection setup for caching
  */
@@ -59,8 +59,8 @@ const disconnectRedis = async () => {
   }
 };
 
-
-
-
-
-};  disconnectRedis  connectRedis,  redisClient,nmodule.exports = {
+module.exports = {
+  redisClient,
+  connectRedis,
+  disconnectRedis
+};

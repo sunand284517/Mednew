@@ -1,4 +1,4 @@
-/*
+/**
  * Delivery Partner Controller
  * Handle delivery partner operations
  */
@@ -398,3 +398,44 @@ const updateDeliveryStatus = async (req, res, next) => {
     
     // Notify customer
     const orderNumber = order._id.toString().slice(-6).toUpperCase();
+    const statusMessages = {
+      'out_for_delivery': { title: '🏃 Almost There!', message: `Your order #${orderNumber} is out for delivery!` },
+      'delivered': { title: '🎉 Order Delivered!', message: `Your order #${orderNumber} has been delivered. Enjoy!` }
+    };
+    
+    if (statusMessages[status]) {
+      await Notification.create({
+        userId: order.userId,
+        type: 'order',
+        title: statusMessages[status].title,
+        message: statusMessages[status].message,
+        data: { orderId: order._id, extra: { status } }
+      });
+      
+      if (req.app.get('io')) {
+        req.app.get('io').to(`user_${order.userId}`).emit('orderStatusUpdate', {
+          orderId: order._id,
+          status,
+          message: statusMessages[status].message
+        });
+      }
+    }
+    
+    return successResponse(res, 'Delivery status updated successfully', { order });
+  } catch (error) {
+    console.error('❌ Error updating delivery status:', error);
+    next(error);
+  }
+};
+
+module.exports = {
+  registerDeliveryPartner,
+  getAvailablePartners,
+  updateAvailability,
+  getDeliveryRequests,
+  acceptDeliveryRequest,
+  getDeliveryStats,
+  getDeliveryEarnings,
+  getMyDeliveryHistory,
+  updateDeliveryStatus
+};

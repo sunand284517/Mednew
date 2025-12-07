@@ -1,4 +1,4 @@
-/*
+/**
  * Environment Configuration
  * Centralized environment variables management
  */

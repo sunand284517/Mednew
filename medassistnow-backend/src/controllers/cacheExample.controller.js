@@ -1,4 +1,4 @@
-/*
+/**
  * Cache Example Controller
  * Demonstrates Redis caching with a simple example
  */
@@ -88,6 +88,6 @@ const example = async (req, res, next) => {
   }
 };
 
-
-
-};  examplenmodule.exports = {
+module.exports = {
+  example
+};

@@ -10,8 +10,8 @@ const http = require('http');
 const cors = require('cors');
 const helmet = require('helmet');
 const morgan = require('morgan');
-const metricsMiddleware = require('./middleware/metrics.middleware');
-const requestLogger = require('./middleware/requestLogger');
+const metricsMiddleware = require('./middleware/middleware/metrics.middleware');
+const requestLogger = require('./middleware/middleware/requestLogger');
 
 // Import configuration
 const { connectDB } = require('./config/database');
@@ -32,8 +32,22 @@ const server = http.createServer(app);
 // Middleware Configuration
 // ========================================
 
-// Security middleware
-app.use(helmet());
+// Security middleware - Configure helmet with CSP allowing inline scripts for frontend
+app.use(helmet({
+  contentSecurityPolicy: {
+    directives: {
+      defaultSrc: ["'self'"],
+      scriptSrc: ["'self'", "'unsafe-inline'", "https://cdn.socket.io"],
+      scriptSrcAttr: ["'unsafe-inline'"],
+      styleSrc: ["'self'", "'unsafe-inline'", "https://fonts.googleapis.com", "https://cdnjs.cloudflare.com"],
+      fontSrc: ["'self'", "https://fonts.gstatic.com", "https://cdnjs.cloudflare.com"],
+      connectSrc: ["'self'", "http://localhost:*", "ws://localhost:*", "https://cdn.socket.io"],
+      imgSrc: ["'self'", "data:", "https:"],
+      mediaSrc: ["'self'"],
+      objectSrc: ["'none'"]
+    }
+  }
+}));
 
 // CORS configuration - Allow all origins for development
 app.use(cors({
@@ -49,12 +63,18 @@ app.use(express.urlencoded({ extended: true, limit: '50mb' }));
 // Serve static files from public directory (frontend)
 const path = require('path');
 const fs = require('fs');
-app.use(express.static(path.join(__dirname, '../public')));
+
 // Serve medassistnow-frontend if it exists
-const frontendPath = path.join(__dirname, '../medassistnow-frontend');
+const frontendPath = path.join(__dirname, '../../medassistnow-frontend');
 const publicPath = path.join(__dirname, '../public');
+
 if (fs.existsSync(frontendPath)) {
   app.use(express.static(frontendPath));
+  console.log(`📁 Serving frontend from: ${frontendPath}`);
+}
+
+if (fs.existsSync(publicPath)) {
+  app.use(express.static(publicPath));
 }
 
 // HTTP request logger (only in development)
@@ -164,19 +184,64 @@ app.use((err, req, res, next) => {
 // Server Initialization
 // ========================================
 
+// ========================================
+// Server Initialization
+// ========================================
+
 const startServer = async () => {
   try {
-    // Connect to MongoDB
-    await connectDB();
+    console.log('Starting service connections...');
     
-    // Connect to Redis
-    await connectRedis();
+    // Connect to MongoDB with timeout
+    let mongoConnected = false;
+    try {
+      await Promise.race([
+        connectDB(),
+        new Promise((_, reject) => setTimeout(() => reject(new Error('MongoDB connection timeout')), 8000))
+      ]);
+      mongoConnected = true;
+    } catch (error) {
+      console.warn('⚠️  MongoDB connection failed:', error.message);
+      console.log('Continuing server startup...');
+    }
     
-    // Connect to RabbitMQ
-    await connectRabbitMQ();
+    // Connect to Redis (non-blocking)
+    try {
+      await Promise.race([
+        connectRedis(),
+        new Promise((_, reject) => setTimeout(() => reject(new Error('Redis connection timeout')), 5000))
+      ]);
+    } catch (error) {
+      console.warn('⚠️  Redis connection failed');
+    }
     
-    // Connect to Elasticsearch
-    await connectElasticsearch();
+    // Connect to RabbitMQ (non-blocking)
+    try {
+      await Promise.race([
+        connectRabbitMQ(),
+        new Promise((_, reject) => setTimeout(() => reject(new Error('RabbitMQ connection timeout')), 5000))
+      ]);
+    } catch (error) {
+      console.warn('⚠️  RabbitMQ connection failed');
+    }
+    
+    // Connect to Elasticsearch (non-blocking)
+    try {
+      await Promise.race([
+        connectElasticsearch(),
+        new Promise((_, reject) => setTimeout(() => reject(new Error('Elasticsearch connection timeout')), 5000))
+      ]);
+      
+      // Initialize delivery index for Kibana visualizations
+      try {
+        const deliveryLogger = require('./services/delivery-logger.service');
+        await deliveryLogger.initializeDeliveryIndex();
+      } catch (error) {
+        console.warn('⚠️  Failed to initialize delivery index:', error.message);
+      }
+    } catch (error) {
+      console.warn('⚠️  Elasticsearch connection failed');
+    }
     
     // Initialize Socket.IO
     const io = initializeSocketIO(server);
@@ -232,21 +297,37 @@ const startServer = async () => {
       console.log('========================================');
     });
   } catch (error) {
-    console.error('❌ Failed to start server:', error.message);
-    process.exit(1);
+    console.error('⚠️  Server startup error:', error.message);
+    // Still try to start the server even if there are connection issues
+    try {
+      const io = initializeSocketIO(server);
+      app.set('io', io);
+      
+      server.listen(PORT, () => {
+        console.log('========================================');
+        console.log('🚀 MedAssist Now Backend Server (Limited Mode)');
+        console.log('========================================');
+        console.log(`📡 Server running on port ${PORT}`);
+        console.log('⚠️  Running with limited functionality due to service unavailability');
+        console.log('========================================');
+      });
+    } catch (innerError) {
+      console.error('❌ Cannot start server:', innerError.message);
+      process.exit(1);
+    }
   }
 };
 
-// Handle unhandled promise rejections
+// Handle unhandled promise rejections (don't crash)
 process.on('unhandledRejection', (err) => {
-  console.error('❌ Unhandled Promise Rejection:', err);
-  process.exit(1);
+  console.error('⚠️  Unhandled Promise Rejection:', err.message || err);
+  // Don't exit - let the server keep running
 });
 
-// Handle uncaught exceptions
+// Handle uncaught exceptions (don't crash)
 process.on('uncaughtException', (err) => {
-  console.error('❌ Uncaught Exception:', err);
-  process.exit(1);
+  console.error('⚠️  Uncaught Exception:', err.message || err);
+  // Don't exit - let the server keep running
 });
 
 // Start the server
